@@ -1,4 +1,11 @@
 ﻿using SharpDX;
+using Device = SharpDX.Direct3D11.Device;
+using EffectMatrixVariable = SharpDX.Direct3D11.EffectMatrixVariable;
+using EffectScalarVariable = SharpDX.Direct3D11.EffectScalarVariable;
+using EffectShaderResourceVariable = SharpDX.Direct3D11.EffectShaderResourceVariable;
+using EffectTechnique = SharpDX.Direct3D11.EffectTechnique;
+using EffectVectorVariable = SharpDX.Direct3D11.EffectVectorVariable;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
 
 namespace Engine.Effects
 {
@@ -12,58 +19,58 @@ namespace Engine.Effects
         /// <summary>
         /// Default clouds technique
         /// </summary>
-        public readonly EngineEffectTechnique CloudsStatic = null;
+        public readonly EffectTechnique CloudsStatic = null;
         /// <summary>
         /// Perturbed clouds technique
         /// </summary>
-        public readonly EngineEffectTechnique CloudsPerturbed = null;
+        public readonly EffectTechnique CloudsPerturbed = null;
 
         /// <summary>
         /// World view projection effect variable
         /// </summary>
-        private EngineEffectVariableMatrix worldViewProjection = null;
+        private EffectMatrixVariable worldViewProjection = null;
         /// <summary>
         /// First layer texture effect variable
         /// </summary>
-        private EngineEffectVariableTexture firstTexture = null;
+        private EffectShaderResourceVariable firstTexture = null;
         /// <summary>
         /// Second layer texture effect variable
         /// </summary>
-        private EngineEffectVariableTexture secondTexture = null;
+        private EffectShaderResourceVariable secondTexture = null;
         /// <summary>
         /// Brightness
         /// </summary>
-        private EngineEffectVariableScalar brightness = null;
+        private EffectScalarVariable brightness = null;
         /// <summary>
         /// Clouds fadding distance effect variable
         /// </summary>
-        private EngineEffectVariableScalar fadingDistance = null;
+        private EffectScalarVariable fadingDistance = null;
 
         /// <summary>
         /// First layer translation effect variable
         /// </summary>
-        private EngineEffectVariableVector firstTranslation = null;
+        private EffectVectorVariable firstTranslation = null;
         /// <summary>
         /// Second layer translation effect variable
         /// </summary>
-        private EngineEffectVariableVector secondTranslation = null;
+        private EffectVectorVariable secondTranslation = null;
         /// <summary>
         /// Clouds translation effect variable
         /// </summary>
-        private EngineEffectVariableScalar translation = null;
+        private EffectScalarVariable translation = null;
         /// <summary>
         /// Clouds scale effect variable
         /// </summary>
-        private EngineEffectVariableScalar scale = null;
+        private EffectScalarVariable scale = null;
 
         /// <summary>
         /// Current first texture
         /// </summary>
-        private EngineShaderResourceView currentFirstTexture = null;
+        private ShaderResourceView currentFirstTexture = null;
         /// <summary>
         /// Current second texture
         /// </summary>
-        private EngineShaderResourceView currentSecondTexture = null;
+        private ShaderResourceView currentSecondTexture = null;
 
         /// <summary>
         /// World view projection matrix
@@ -82,7 +89,7 @@ namespace Engine.Effects
         /// <summary>
         /// First layer texture
         /// </summary>
-        protected EngineShaderResourceView FirstTexture
+        protected ShaderResourceView FirstTexture
         {
             get
             {
@@ -103,7 +110,7 @@ namespace Engine.Effects
         /// <summary>
         /// Second layer texture
         /// </summary>
-        protected EngineShaderResourceView SecondTexture
+        protected ShaderResourceView SecondTexture
         {
             get
             {
@@ -217,27 +224,27 @@ namespace Engine.Effects
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="graphics">Graphics device</param>
+        /// <param name="device">Graphics device</param>
         /// <param name="effect">Effect code</param>
         /// <param name="compile">Compile code</param>
-        public EffectDefaultClouds(Graphics graphics, byte[] effect, bool compile)
-            : base(graphics, effect, compile)
+        public EffectDefaultClouds(Device device, byte[] effect, bool compile)
+            : base(device, effect, compile)
         {
             this.CloudsStatic = this.Effect.GetTechniqueByName("CloudsStatic");
             this.CloudsPerturbed = this.Effect.GetTechniqueByName("CloudsPerturbed");
 
-            this.firstTexture = this.Effect.GetVariableTexture("gCloudTexture1");
-            this.secondTexture = this.Effect.GetVariableTexture("gCloudTexture2");
+            this.firstTexture = this.Effect.GetVariableByName("gCloudTexture1").AsShaderResource();
+            this.secondTexture = this.Effect.GetVariableByName("gCloudTexture2").AsShaderResource();
 
-            this.worldViewProjection = this.Effect.GetVariableMatrix("gWorldViewProjection");
-            this.brightness = this.Effect.GetVariableScalar("gBrightness");
-            this.fadingDistance = this.Effect.GetVariableScalar("gFadingDistance");
+            this.worldViewProjection = this.Effect.GetVariableByName("gWorldViewProjection").AsMatrix();
+            this.brightness = this.Effect.GetVariableByName("gBrightness").AsScalar();
+            this.fadingDistance = this.Effect.GetVariableByName("gFadingDistance").AsScalar();
 
-            this.firstTranslation = this.Effect.GetVariableVector("gFirstTranslation");
-            this.secondTranslation = this.Effect.GetVariableVector("gSecondTranslation");
+            this.firstTranslation = this.Effect.GetVariableByName("gFirstTranslation").AsVector();
+            this.secondTranslation = this.Effect.GetVariableByName("gSecondTranslation").AsVector();
 
-            this.translation = this.Effect.GetVariableScalar("gTranslation");
-            this.scale = this.Effect.GetVariableScalar("gScale");
+            this.translation = this.Effect.GetVariableByName("gTranslation").AsScalar();
+            this.scale = this.Effect.GetVariableByName("gScale").AsScalar();
         }
         /// <summary>
         /// Get technique by vertex type
@@ -247,7 +254,7 @@ namespace Engine.Effects
         /// <param name="stage">Stage</param>
         /// <param name="mode">Mode</param>
         /// <returns>Returns the technique to process the specified vertex type in the specified pipeline stage</returns>
-        public override EngineEffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
+        public override EffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
         {
             throw new EngineException("Use technique variables directly");
         }
@@ -266,8 +273,8 @@ namespace Engine.Effects
             Matrix viewProjection,
             float brightness,
             float fadingDistance,
-            EngineShaderResourceView firstTexture,
-            EngineShaderResourceView secondTexture)
+            ShaderResourceView firstTexture,
+            ShaderResourceView secondTexture)
         {
             this.WorldViewProjection = world * viewProjection;
 

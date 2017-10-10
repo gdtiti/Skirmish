@@ -1,5 +1,6 @@
 ﻿using SharpDX;
 using System;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
 
 namespace Engine.Common
 {
@@ -29,27 +30,27 @@ namespace Engine.Common
         /// <summary>
         /// Emission texture
         /// </summary>
-        public EngineShaderResourceView EmissionTexture { get; set; }
+        public ShaderResourceView EmissionTexture { get; set; }
         /// <summary>
         /// Ambient texture
         /// </summary>
-        public EngineShaderResourceView AmbientTexture { get; set; }
+        public ShaderResourceView AmbientTexture { get; set; }
         /// <summary>
         /// Diffuse texture
         /// </summary>
-        public EngineShaderResourceView DiffuseTexture { get; set; }
+        public ShaderResourceView DiffuseTexture { get; set; }
         /// <summary>
         /// Specular texture
         /// </summary>
-        public EngineShaderResourceView SpecularTexture { get; set; }
+        public ShaderResourceView SpecularTexture { get; set; }
         /// <summary>
         /// Reflective texture
         /// </summary>
-        public EngineShaderResourceView ReflectiveTexture { get; set; }
+        public ShaderResourceView ReflectiveTexture { get; set; }
         /// <summary>
         /// Normal map
         /// </summary>
-        public EngineShaderResourceView NormalMap { get; set; }
+        public ShaderResourceView NormalMap { get; set; }
 
         /// <summary>
         /// Resource index

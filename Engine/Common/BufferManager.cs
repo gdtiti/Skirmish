@@ -1,12 +1,16 @@
-﻿using System;
+﻿using SharpDX.Direct3D;
+using SharpDX.DXGI;
+using System;
 using System.Collections.Generic;
+using Buffer = SharpDX.Direct3D11.Buffer;
+using EffectTechnique = SharpDX.Direct3D11.EffectTechnique;
+using InputElement = SharpDX.Direct3D11.InputElement;
+using InputLayout = SharpDX.Direct3D11.InputLayout;
+using VertexBufferBinding = SharpDX.Direct3D11.VertexBufferBinding;
 
 namespace Engine.Common
 {
     using Engine.Helpers;
-    using SharpDX.Direct3D;
-    using SharpDX.Direct3D11;
-    using SharpDX.DXGI;
 
     /// <summary>
     /// Buffer manager
@@ -153,7 +157,7 @@ namespace Engine.Common
         /// <summary>
         /// Input layouts by technique
         /// </summary>
-        private Dictionary<EngineEffectTechnique, InputLayout> inputLayouts = new Dictionary<EngineEffectTechnique, InputLayout>();
+        private Dictionary<EffectTechnique, InputLayout> inputLayouts = new Dictionary<EffectTechnique, InputLayout>();
 
         /// <summary>
         /// Vertex buffers
@@ -338,16 +342,17 @@ namespace Engine.Common
         /// <param name="technique">Technique</param>
         /// <param name="vertexType">Vertex type</param>
         /// <param name="topology">Topology</param>
-        public void SetInputAssembler(EngineEffectTechnique technique, int slot, PrimitiveTopology topology)
+        public void SetInputAssembler(EffectTechnique technique, int slot, PrimitiveTopology topology)
         {
             //The technique defines the vertex type
             if (!inputLayouts.ContainsKey(technique))
             {
+                var desc = technique.GetPassByIndex(0).Description;
                 var key = this.vertexData[slot];
 
                 this.inputLayouts.Add(
                     technique,
-                    technique.Create(this.game.Graphics, key.Input.ToArray()));
+                    new InputLayout(this.game.Graphics.Device, desc.Signature, key.Input.ToArray()));
             }
 
             this.game.Graphics.IAInputLayout = inputLayouts[technique];

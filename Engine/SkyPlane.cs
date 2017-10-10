@@ -1,6 +1,7 @@
 ﻿using SharpDX;
 using SharpDX.Direct3D;
 using System;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
 
 namespace Engine
 {
@@ -24,11 +25,11 @@ namespace Engine
         /// <summary>
         /// Sky texture 1
         /// </summary>
-        private EngineShaderResourceView skyTexture1 = null;
+        private ShaderResourceView skyTexture1 = null;
         /// <summary>
         /// Sky texture 2
         /// </summary>
-        private EngineShaderResourceView skyTexture2 = null;
+        private ShaderResourceView skyTexture2 = null;
         /// <summary>
         /// Brightness
         /// </summary>
@@ -211,9 +212,9 @@ namespace Engine
 
                 this.Game.Graphics.SetBlendAdditive();
 
-                for (int p = 0; p < technique.PassCount; p++)
+                for (int p = 0; p < technique.Description.PassCount; p++)
                 {
-                    technique.Apply(this.Game.Graphics, p, 0);
+                    technique.GetPassByIndex(p).Apply(this.Game.Graphics.DeviceContext, 0);
 
                     this.Game.Graphics.DeviceContext.DrawIndexed(this.indexBuffer.Count, this.indexBuffer.Offset, this.vertexBuffer.Offset);
 

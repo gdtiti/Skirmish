@@ -1,9 +1,10 @@
 ﻿using SharpDX.DXGI;
 using System;
+using RenderTargetView = SharpDX.Direct3D11.RenderTargetView;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
 
 namespace Engine
 {
-    using Engine.Common;
     using Engine.Helpers;
 
     /// <summary>
@@ -27,11 +28,11 @@ namespace Engine
         /// <summary>
         /// Buffer textures
         /// </summary>
-        public EngineShaderResourceView[] Textures { get; protected set; }
+        public ShaderResourceView[] Textures { get; protected set; }
         /// <summary>
         /// Render targets
         /// </summary>
-        public EngineRenderTargetView Targets { get; protected set; }
+        public RenderTargetView[] Targets { get; protected set; }
 
         /// <summary>
         /// Constructor
@@ -71,17 +72,17 @@ namespace Engine
             int width = this.Game.Form.RenderWidth;
             int height = this.Game.Form.RenderHeight;
 
-            this.Textures = new EngineShaderResourceView[this.BufferCount];
-            this.Targets = new EngineRenderTargetView();
+            this.Textures = new ShaderResourceView[this.BufferCount];
+            this.Targets = new RenderTargetView[this.BufferCount];
 
             for (int i = 0; i < this.BufferCount; i++)
             {
                 var tex = this.Game.Graphics.CreateRenderTargetTexture(this.RenderTargetFormat, width, height);
                 using (tex)
                 {
-                    this.Targets.Add(this.Game.Graphics.Device, tex);
+                    this.Targets[i] = new RenderTargetView(this.Game.Graphics.Device, tex);
 
-                    this.Textures[i] = new EngineShaderResourceView(this.Game.Graphics.Device, tex);
+                    this.Textures[i] = new ShaderResourceView(this.Game.Graphics.Device, tex);
                 }
             }
         }

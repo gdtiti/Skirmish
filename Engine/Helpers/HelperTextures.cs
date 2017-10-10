@@ -1,5 +1,4 @@
 ﻿using SharpDX;
-using SharpDX.Direct3D;
 using SharpDX.DXGI;
 using SharpDX.WIC;
 using System;
@@ -8,7 +7,6 @@ using System.IO;
 
 namespace Engine.Helpers
 {
-    using Engine.Common;
     using Engine.Helpers.DDS;
     using SharpDX.Direct3D11;
 
@@ -17,6 +15,61 @@ namespace Engine.Helpers
     /// </summary>
     static class HelperTextures
     {
+        private static bool GetInfo(string filename, out DDSHeader header, out int offset, out byte[] buffer)
+        {
+            buffer = File.ReadAllBytes(filename);
+
+            return GetInfo(buffer, out header, out offset);
+        }
+        private static bool GetInfo(MemoryStream stream, out DDSHeader header, out int offset, out byte[] buffer)
+        {
+            buffer = stream.GetBuffer();
+            return GetInfo(buffer, out header, out offset);
+        }
+        private static bool GetInfo(byte[] data, out DDSHeader header, out int offset)
+        {
+            // Validate DDS file in memory
+            header = new DDSHeader();
+            offset = 0;
+
+            if (data.Length < (sizeof(uint) + DDSHeader.StructSize))
+            {
+                return false;
+            }
+
+            //first is magic number
+            int dwMagicNumber = BitConverter.ToInt32(data, 0);
+            if (dwMagicNumber != DDSHeader.DDS_MAGIC)
+            {
+                return false;
+            }
+
+            header = data.ToStructure<DDSHeader>(4, DDSHeader.StructSize);
+
+            // Verify header to validate DDS file
+            if (header.Size != DDSHeader.StructSize ||
+                header.PixelFormat.Size != DDSPixelFormat.StructSize)
+            {
+                return false;
+            }
+
+            // Check for DX10 extension
+            bool bDXT10Header = false;
+            if (header.IsDX10)
+            {
+                // Must be long enough for both headers and magic value
+                if (data.Length < (DDSHeader.StructSize + 4 + DDSHeaderDX10.StructSize))
+                {
+                    return false;
+                }
+
+                bDXT10Header = true;
+            }
+
+            offset = 4 + DDSHeader.StructSize + (bDXT10Header ? DDSHeaderDX10.StructSize : 0);
+
+            return true;
+        }
         private static BitmapSource ReadBitmap(string filename)
         {
             using (var factory = new ImagingFactory2())
@@ -55,180 +108,201 @@ namespace Engine.Helpers
                 return formatConverter;
             }
         }
-        private static TextureDescription ReadTexture(byte[] buffer)
-        {
-            DDSHeader header;
-            int offset;
-            if (DDSHeader.GetInfo(buffer, out header, out offset))
-            {
-                return new TextureDescription(header, null, buffer, offset, 0);
-            }
-            else
-            {
-                using (var stream = new MemoryStream(buffer))
-                using (var bitmap = ReadBitmap(stream))
-                {
-                    return new TextureDescription(bitmap);
-                }
-            }
-        }
-        private static TextureDescription ReadTexture(string filename)
+        private static Resource CreateResource(Device device, string filename, bool shaderResource)
         {
             DDSHeader header;
             int offset;
             byte[] buffer;
-            if (DDSHeader.GetInfo(filename, out header, out offset, out buffer))
+            if (GetInfo(filename, out header, out offset, out buffer))
             {
-                return new TextureDescription(header, null, buffer, offset, 0);
+                bool isCube;
+                return CreateResourceFromDDS(device, header, null, buffer, offset, 0, shaderResource, out isCube);
             }
             else
             {
                 using (var bitmap = ReadBitmap(filename))
                 {
-                    return new TextureDescription(bitmap);
+                    return CreateResourceFromBitmapSource(device, bitmap, shaderResource);
                 }
             }
         }
-        private static TextureDescription ReadTexture(MemoryStream stream)
+        private static Resource CreateResource(Device device, byte[] buffer, bool shaderResource)
+        {
+            DDSHeader header;
+            int offset;
+            if (GetInfo(buffer, out header, out offset))
+            {
+                bool isCube;
+                return CreateResourceFromDDS(device, header, null, buffer, offset, 0, shaderResource, out isCube);
+            }
+            else
+            {
+                using (var mem = new MemoryStream(buffer))
+                using (var bitmap = ReadBitmap(mem))
+                {
+                    return CreateResourceFromBitmapSource(device, bitmap, shaderResource);
+                }
+            }
+        }
+        private static Resource CreateResource(Device device, MemoryStream stream, bool shaderResource)
         {
             DDSHeader header;
             int offset;
             byte[] buffer;
-            if (DDSHeader.GetInfo(stream, out header, out offset, out buffer))
+            if (GetInfo(stream, out header, out offset, out buffer))
             {
-                return new TextureDescription(header, null, buffer, offset, 0);
+                bool isCube;
+                return CreateResourceFromDDS(device, header, null, buffer, offset, 0, shaderResource, out isCube);
             }
             else
             {
                 using (var bitmap = ReadBitmap(stream))
                 {
-                    return new TextureDescription(bitmap);
+                    return CreateResourceFromBitmapSource(device, bitmap, shaderResource);
                 }
             }
         }
-        private static TextureDescription[] ReadTexture(string[] filenames)
+        private static Resource CreateResourceFromBitmapSource(Device device, BitmapSource bitmap, bool shaderResource)
         {
-            TextureDescription[] textureList = new TextureDescription[filenames.Length];
+            // Allocate DataStream to receive the WIC image pixels
+            int stride = bitmap.Size.Width * 4;
 
-            for (int i = 0; i < filenames.Length; i++)
+            using (var buffer = new DataStream(bitmap.Size.Height * stride, true, true))
             {
-                textureList[i] = ReadTexture(filenames[i]);
-            }
+                // Copy the content of the WIC to the buffer
+                bitmap.CopyPixels(stride, buffer);
 
-            return textureList;
-        }
-        private static TextureDescription[] ReadTexture(MemoryStream[] streams)
-        {
-            TextureDescription[] textureList = new TextureDescription[streams.Length];
+                var dr = new DataRectangle(buffer.DataPointer, stride);
 
-            for (int i = 0; i < streams.Length; i++)
-            {
-                textureList[i] = ReadTexture(streams[i]);
-            }
+                Texture2DDescription description;
 
-            return textureList;
-        }
-        private static EngineShaderResourceView CreateResource(Graphics graphics, TextureDescription tDesc)
-        {
-            var fmtSupport = graphics.Device.CheckFormatSupport(tDesc.Format);
-            var autogen = fmtSupport.HasFlag(FormatSupport.MipAutogen);
-
-            using (var texture = CreateTexture2D(graphics, tDesc.Width, tDesc.Height, tDesc.Format, 1, autogen))
-            {
-                EngineShaderResourceView result = null;
-
-                if (autogen)
+                if (shaderResource)
                 {
-                    var description = new ShaderResourceViewDescription()
+                    description = new Texture2DDescription()
                     {
-                        Format = texture.Description.Format,
-                        Dimension = ShaderResourceViewDimension.Texture2D,
-                        Texture2D = new ShaderResourceViewDescription.Texture2DResource()
-                        {
-                            MipLevels = (autogen) ? -1 : 1,
-                        }
+                        Width = bitmap.Size.Width,
+                        Height = bitmap.Size.Height,
+                        ArraySize = 1,
+                        BindFlags = BindFlags.ShaderResource,
+                        Usage = ResourceUsage.Immutable,
+                        CpuAccessFlags = CpuAccessFlags.None,
+                        Format = Format.R8G8B8A8_UNorm,
+                        MipLevels = 1,
+                        OptionFlags = ResourceOptionFlags.None,
+                        SampleDescription = new SampleDescription(1, 0),
                     };
-                    result = new EngineShaderResourceView(graphics.Device, texture, description);
                 }
                 else
                 {
-                    result = new EngineShaderResourceView(graphics.Device, texture);
-                }
-
-                graphics.DeviceContext.UpdateSubresource(tDesc.GetDataBox(), texture, 0);
-
-                if (autogen)
-                {
-                    graphics.DeviceContext.GenerateMips(result.SRV);
-                }
-
-                return result;
-            }
-        }
-        private static EngineShaderResourceView CreateResource(Graphics graphics, TextureDescription[] tDescList)
-        {
-            var textureDescription = tDescList[0];
-
-            var fmtSupport = graphics.Device.CheckFormatSupport(textureDescription.Format);
-            var autogen = fmtSupport.HasFlag(FormatSupport.MipAutogen);
-
-            using (var textureArray = CreateTexture2D(graphics, textureDescription.Width, textureDescription.Height, textureDescription.Format, tDescList.Length, autogen))
-            {
-                EngineShaderResourceView result = null;
-
-                if (autogen)
-                {
-                    var desc = new ShaderResourceViewDescription()
+                    description = new Texture2DDescription()
                     {
-                        Format = textureDescription.Format,
-                        Dimension = ShaderResourceViewDimension.Texture2DArray,
-                        Texture2DArray = new ShaderResourceViewDescription.Texture2DArrayResource()
-                        {
-                            ArraySize = tDescList.Length,
-                            MipLevels = (autogen) ? -1 : 1,
-                        }
+                        Width = bitmap.Size.Width,
+                        Height = bitmap.Size.Height,
+                        ArraySize = 1,
+                        BindFlags = BindFlags.None,
+                        Usage = ResourceUsage.Staging,
+                        CpuAccessFlags = CpuAccessFlags.Write | CpuAccessFlags.Read,
+                        Format = Format.R8G8B8A8_UNorm,
+                        MipLevels = 1,
+                        OptionFlags = ResourceOptionFlags.None,
+                        SampleDescription = new SampleDescription(1, 0),
                     };
-
-                    result = new EngineShaderResourceView(graphics.Device, textureArray, desc);
-                }
-                else
-                {
-                    result = new EngineShaderResourceView(graphics.Device, textureArray);
                 }
 
-                for (int i = 0; i < tDescList.Length; i++)
-                {
-                    int mipSize;
-                    var index = textureArray.CalculateSubResourceIndex(0, i, out mipSize);
-
-                    graphics.DeviceContext.UpdateSubresource(tDescList[i].GetDataBox(), textureArray, index);
-                }
-
-                if (autogen)
-                {
-                    graphics.DeviceContext.GenerateMips(result.SRV);
-                }
-
-                return result;
+                return new Texture2D(device, description, dr);
             }
         }
-        private static Texture2D CreateTexture2D(Graphics graphics, int width, int height, Format format, int arraySize, bool generateMips)
+        private static Resource CreateResourceFromDDS(Device device, DDSHeader header, DDSHeaderDX10? header10, byte[] bitData, int offset, int maxsize, bool shaderResource, out bool isCubeMap)
         {
-            var description = new Texture2DDescription()
-            {
-                Width = width,
-                Height = height,
-                ArraySize = arraySize,
-                BindFlags = (generateMips) ? BindFlags.ShaderResource | BindFlags.RenderTarget : BindFlags.ShaderResource,
-                Usage = ResourceUsage.Default,
-                CpuAccessFlags = CpuAccessFlags.None,
-                Format = format,
-                MipLevels = (generateMips) ? 0 : 1,
-                OptionFlags = (generateMips) ? ResourceOptionFlags.GenerateMipMaps : ResourceOptionFlags.None,
-                SampleDescription = new SampleDescription(1, 0),
-            };
+            isCubeMap = false;
 
-            return new Texture2D(graphics.Device, description);
+            bool validFile = false;
+
+            int width = header.Width;
+            int height = header.Height;
+            int depth = header.Depth;
+            Format format;
+            ResourceDimension resDim;
+            int arraySize;
+
+            if (header.IsDX10)
+            {
+                validFile = header10.Value.Validate(
+                    header.Flags,
+                    ref width, ref height, ref depth,
+                    out format, out resDim, out arraySize, out isCubeMap);
+            }
+            else
+            {
+                validFile = header.Validate(
+                    ref width, ref height, ref depth,
+                    out format, out resDim, out arraySize, out isCubeMap);
+            }
+
+            if (validFile)
+            {
+                int mipCount = header.MipMapCount;
+                if (0 == mipCount)
+                {
+                    mipCount = 1;
+                }
+
+                int numBytes = 0;
+                int numRowBytes = 0;
+                int numRows = 0;
+                DDSPixelFormat.GetSurfaceInfo(
+                    width, height, format, 
+                    out numBytes, out numRowBytes, out numRows);
+
+                var bytes = new byte[numBytes];
+                Array.Copy(bitData, offset, bytes, 0, numBytes);
+
+                using (var buffer = DataStream.Create(bytes, true, true))
+                {
+                    var dr = new DataRectangle(buffer.DataPointer, numRowBytes);
+
+                    Texture2DDescription description;
+
+                    if (shaderResource)
+                    {
+                        description = new Texture2DDescription()
+                        {
+                            Width = width,
+                            Height = height,
+                            ArraySize = 1,
+                            BindFlags = BindFlags.ShaderResource,
+                            Usage = ResourceUsage.Immutable,
+                            CpuAccessFlags = CpuAccessFlags.None,
+                            Format = format,
+                            MipLevels = 1,
+                            OptionFlags = ResourceOptionFlags.None,
+                            SampleDescription = new SampleDescription(1, 0),
+                        };
+                    }
+                    else
+                    {
+                        description = new Texture2DDescription()
+                        {
+                            Width = width,
+                            Height = height,
+                            ArraySize = 1,
+                            BindFlags = BindFlags.None,
+                            Usage = ResourceUsage.Staging,
+                            CpuAccessFlags = CpuAccessFlags.Write | CpuAccessFlags.Read,
+                            Format = format,
+                            MipLevels = 1,
+                            OptionFlags = ResourceOptionFlags.None,
+                            SampleDescription = new SampleDescription(1, 0),
+                        };
+                    }
+
+                    return new Texture2D(device, description, dr);
+                }
+            }
+            else
+            {
+                throw new EngineException("Bad DDS File");
+            }
         }
 
         /// <summary>
@@ -237,16 +311,15 @@ namespace Engine.Helpers
         /// <param name="graphics">Graphics device</param>
         /// <param name="buffer">Data buffer</param>
         /// <returns>Returns the resource view</returns>
-        public static EngineShaderResourceView LoadTexture(this Graphics graphics, byte[] buffer)
+        public static ShaderResourceView LoadTexture(this Graphics graphics, byte[] buffer)
         {
             try
             {
                 Counters.Textures++;
 
-                using (var resorce = ReadTexture(buffer))
-                {
-                    return CreateResource(graphics, resorce);
-                }
+                var texture = CreateResource(graphics.Device, buffer, true);
+
+                return new ShaderResourceView(graphics.Device, texture);
             }
             catch (Exception ex)
             {
@@ -259,16 +332,15 @@ namespace Engine.Helpers
         /// <param name="graphics">Graphics device</param>
         /// <param name="filename">Path to file</param>
         /// <returns>Returns the resource view</returns>
-        public static EngineShaderResourceView LoadTexture(this Graphics graphics, string filename)
+        public static ShaderResourceView LoadTexture(this Graphics graphics, string filename)
         {
             try
             {
                 Counters.Textures++;
 
-                using (var resorce = ReadTexture(filename))
-                {
-                    return CreateResource(graphics, resorce);
-                }
+                var texture = CreateResource(graphics.Device, filename, true);
+
+                return new ShaderResourceView(graphics.Device, texture);
             }
             catch (Exception ex)
             {
@@ -281,16 +353,15 @@ namespace Engine.Helpers
         /// <param name="graphics">Graphics device</param>
         /// <param name="stream">Stream</param>
         /// <returns>Returns the resource view</returns>
-        public static EngineShaderResourceView LoadTexture(this Graphics graphics, MemoryStream stream)
+        public static ShaderResourceView LoadTexture(this Graphics graphics, MemoryStream stream)
         {
             try
             {
                 Counters.Textures++;
 
-                using (var resorce = ReadTexture(stream))
-                {
-                    return CreateResource(graphics, resorce);
-                }
+                var texture = CreateResource(graphics.Device, stream, true);
+
+                return new ShaderResourceView(graphics.Device, texture);
             }
             catch (Exception ex)
             {
@@ -303,19 +374,73 @@ namespace Engine.Helpers
         /// <param name="graphics">Graphics device</param>
         /// <param name="filenames">Path file collection</param>
         /// <returns>Returns the resource view</returns>
-        public static EngineShaderResourceView LoadTextureArray(this Graphics graphics, string[] filenames)
+        public static ShaderResourceView LoadTextureArray(this Graphics graphics, string[] filenames)
         {
             try
             {
                 Counters.Textures++;
 
-                var textureList = ReadTexture(filenames);
+                List<Texture2D> textureList = new List<Texture2D>();
 
-                var resource = CreateResource(graphics, textureList);
+                for (int i = 0; i < filenames.Length; i++)
+                {
+                    var texture = (Texture2D)CreateResource(graphics.Device, File.ReadAllBytes(filenames[i]), false);
 
-                Helper.Dispose(textureList);
+                    textureList.Add(texture);
+                }
 
-                return resource;
+                var textureDescription = textureList[0].Description;
+
+                using (var textureArray = new Texture2D(
+                    graphics.Device,
+                    new Texture2DDescription()
+                    {
+                        Width = textureDescription.Width,
+                        Height = textureDescription.Height,
+                        MipLevels = textureDescription.MipLevels,
+                        ArraySize = filenames.Length,
+                        Format = textureDescription.Format,
+                        SampleDescription = new SampleDescription(1, 0),
+                        Usage = ResourceUsage.Default,
+                        BindFlags = BindFlags.ShaderResource,
+                        CpuAccessFlags = CpuAccessFlags.None,
+                        OptionFlags = ResourceOptionFlags.None,
+                    }))
+                {
+
+                    for (int i = 0; i < textureList.Count; i++)
+                    {
+                        for (int mipLevel = 0; mipLevel < textureDescription.MipLevels; mipLevel++)
+                        {
+                            var mappedTex2D = graphics.Device.ImmediateContext.MapSubresource(
+                                textureList[i],
+                                mipLevel,
+                                MapMode.Read,
+                                MapFlags.None);
+
+                            int subIndex = Resource.CalculateSubResourceIndex(
+                                mipLevel,
+                                i,
+                                textureDescription.MipLevels);
+
+                            graphics.Device.ImmediateContext.UpdateSubresource(
+                                textureArray,
+                                subIndex,
+                                null,
+                                mappedTex2D.DataPointer,
+                                mappedTex2D.RowPitch,
+                                mappedTex2D.SlicePitch);
+
+                            graphics.Device.ImmediateContext.UnmapSubresource(
+                                textureList[i],
+                                mipLevel);
+                        }
+
+                        textureList[i].Dispose();
+                    }
+
+                    return new ShaderResourceView(graphics.Device, textureArray);
+                }
             }
             catch (Exception ex)
             {
@@ -328,19 +453,72 @@ namespace Engine.Helpers
         /// <param name="graphics">Graphics device</param>
         /// <param name="streams">Stream collection</param>
         /// <returns>Returns the resource view</returns>
-        public static EngineShaderResourceView LoadTextureArray(this Graphics graphics, MemoryStream[] streams)
+        public static ShaderResourceView LoadTextureArray(this Graphics graphics, MemoryStream[] streams)
         {
             try
             {
                 Counters.Textures++;
 
-                var textureList = ReadTexture(streams);
+                List<Texture2D> textureList = new List<Texture2D>();
 
-                var resource = CreateResource(graphics, textureList);
+                for (int i = 0; i < streams.Length; i++)
+                {
+                    var texture = (Texture2D)CreateResource(graphics.Device, streams[i], false);
 
-                Helper.Dispose(textureList);
+                    textureList.Add(texture);
+                }
 
-                return resource;
+                var textureDescription = textureList[0].Description;
+
+                using (var textureArray = new Texture2D(
+                    graphics.Device,
+                    new Texture2DDescription()
+                    {
+                        Width = textureDescription.Width,
+                        Height = textureDescription.Height,
+                        MipLevels = textureDescription.MipLevels,
+                        ArraySize = streams.Length,
+                        Format = textureDescription.Format,
+                        SampleDescription = new SampleDescription(1, 0),
+                        Usage = ResourceUsage.Default,
+                        BindFlags = BindFlags.ShaderResource,
+                        CpuAccessFlags = CpuAccessFlags.None,
+                        OptionFlags = ResourceOptionFlags.None,
+                    }))
+                {
+                    for (int i = 0; i < textureList.Count; i++)
+                    {
+                        for (int mipLevel = 0; mipLevel < textureDescription.MipLevels; mipLevel++)
+                        {
+                            var mappedTex2D = graphics.Device.ImmediateContext.MapSubresource(
+                                textureList[i],
+                                mipLevel,
+                                MapMode.Read,
+                                MapFlags.None);
+
+                            int subIndex = Resource.CalculateSubResourceIndex(
+                                mipLevel,
+                                i,
+                                textureDescription.MipLevels);
+
+                            graphics.Device.ImmediateContext.UpdateSubresource(
+                                textureArray,
+                                subIndex,
+                                null,
+                                mappedTex2D.DataPointer,
+                                mappedTex2D.RowPitch,
+                                mappedTex2D.SlicePitch);
+
+                            graphics.Device.ImmediateContext.UnmapSubresource(
+                                textureList[i],
+                                mipLevel);
+                        }
+
+                        textureList[i].Dispose();
+                    }
+
+                    return new ShaderResourceView(graphics.Device, textureArray);
+                }
             }
             catch (Exception ex)
             {
@@ -355,7 +533,7 @@ namespace Engine.Helpers
         /// <param name="format">Format</param>
         /// <param name="faceSize">Face size</param>
         /// <returns>Returns the resource view</returns>
-        public static EngineShaderResourceView LoadTextureCube(this Graphics graphics, string filename, Format format, int faceSize)
+        public static ShaderResourceView LoadTextureCube(this Graphics graphics, string filename, Format format, int faceSize)
         {
             try
             {
@@ -377,7 +555,7 @@ namespace Engine.Helpers
                         OptionFlags = ResourceOptionFlags.GenerateMipMaps | ResourceOptionFlags.TextureCube,
                     }))
                 {
-                    return new EngineShaderResourceView(graphics.Device, cubeTex);
+                    return new ShaderResourceView(graphics.Device, cubeTex);
                 }
             }
             catch (Exception ex)
@@ -393,7 +571,7 @@ namespace Engine.Helpers
         /// <param name="format">Format</param>
         /// <param name="faceSize">Face size</param>
         /// <returns>Returns the resource view</returns>
-        public static EngineShaderResourceView LoadTextureCube(this Graphics graphics, MemoryStream stream, Format format, int faceSize)
+        public static ShaderResourceView LoadTextureCube(this Graphics graphics, MemoryStream stream, Format format, int faceSize)
         {
             try
             {
@@ -415,7 +593,7 @@ namespace Engine.Helpers
                         OptionFlags = ResourceOptionFlags.GenerateMipMaps | ResourceOptionFlags.TextureCube,
                     }))
                 {
-                    return new EngineShaderResourceView(graphics.Device, cubeTex);
+                    return new ShaderResourceView(graphics.Device, cubeTex);
                 }
             }
             catch (Exception ex)
@@ -430,7 +608,7 @@ namespace Engine.Helpers
         /// <param name="size">Texture size</param>
         /// <param name="values">Color values</param>
         /// <returns>Returns created texture</returns>
-        public static EngineShaderResourceView CreateTexture1D(this Graphics graphics, int size, Vector4[] values)
+        public static ShaderResourceView CreateTexture1D(this Graphics graphics, int size, Vector4[] values)
         {
             try
             {
@@ -453,7 +631,7 @@ namespace Engine.Helpers
                         },
                         str))
                     {
-                        return new EngineShaderResourceView(graphics.Device, randTex);
+                        return new ShaderResourceView(graphics.Device, randTex);
                     }
                 }
             }
@@ -469,7 +647,7 @@ namespace Engine.Helpers
         /// <param name="size">Texture size</param>
         /// <param name="values">Color values</param>
         /// <returns>Returns created texture</returns>
-        public static EngineShaderResourceView CreateTexture2D(this Graphics graphics, int size, Vector4[] values)
+        public static ShaderResourceView CreateTexture2D(this Graphics graphics, int size, Vector4[] values)
         {
             try
             {
@@ -499,7 +677,7 @@ namespace Engine.Helpers
                         },
                         new[] { dBox }))
                     {
-                        return new EngineShaderResourceView(graphics.Device, texture);
+                        return new ShaderResourceView(graphics.Device, texture);
                     }
                 }
             }
@@ -517,7 +695,7 @@ namespace Engine.Helpers
         /// <param name="max">Maximum value</param>
         /// <param name="seed">Random seed</param>
         /// <returns>Returns created texture</returns>
-        public static EngineShaderResourceView CreateRandomTexture(this Graphics graphics, int size, float min, float max, int seed = 0)
+        public static ShaderResourceView CreateRandomTexture(this Graphics graphics, int size, float min, float max, int seed = 0)
         {
             try
             {
@@ -570,76 +748,6 @@ namespace Engine.Helpers
             catch (Exception ex)
             {
                 throw new EngineException("CreateRenderTargetTexture Error. See inner exception for details", ex);
-            }
-        }
-        /// <summary>
-        /// Creates a set of texture and depth stencil view for shadow mapping
-        /// </summary>
-        /// <param name="graphics">Device</param>
-        /// <param name="width">Width</param>
-        /// <param name="height">Height</param>
-        /// <param name="dsv">Resulting Depth Stencil View</param>
-        /// <param name="srv">Resulting Shader Resource View</param>
-        public static void CreateShadowMapTextures(this Graphics graphics, int width, int height, out EngineDepthStencilView dsv, out EngineShaderResourceView srv)
-        {
-            var depthMap = new Texture2D(
-                graphics.Device,
-                new Texture2DDescription
-                {
-                    Width = width,
-                    Height = height,
-                    MipLevels = 1,
-                    ArraySize = 1,
-                    Format = Format.R24G8_Typeless,
-                    SampleDescription = graphics.CurrentSampleDescription,
-                    Usage = ResourceUsage.Default,
-                    BindFlags = BindFlags.DepthStencil | BindFlags.ShaderResource,
-                    CpuAccessFlags = CpuAccessFlags.None,
-                    OptionFlags = ResourceOptionFlags.None
-                });
-
-            using (depthMap)
-            {
-                var dsDimension = graphics.MultiSampled ?
-                    DepthStencilViewDimension.Texture2DMultisampled :
-                    DepthStencilViewDimension.Texture2D;
-
-                var dsDescription = new DepthStencilViewDescription
-                {
-                    Flags = DepthStencilViewFlags.None,
-                    Format = Format.D24_UNorm_S8_UInt,
-                    Dimension = dsDimension,
-                    Texture2D = new DepthStencilViewDescription.Texture2DResource()
-                    {
-                        MipSlice = 0,
-                    },
-                    Texture2DMS = new DepthStencilViewDescription.Texture2DMultisampledResource()
-                    {
-
-                    },
-                };
-
-                var rvDimension = graphics.MultiSampled ?
-                    ShaderResourceViewDimension.Texture2DMultisampled :
-                    ShaderResourceViewDimension.Texture2D;
-
-                var rvDescription = new ShaderResourceViewDescription
-                {
-                    Format = Format.R24_UNorm_X8_Typeless,
-                    Dimension = rvDimension,
-                    Texture2D = new ShaderResourceViewDescription.Texture2DResource()
-                    {
-                        MipLevels = 1,
-                        MostDetailedMip = 0
-                    },
-                    Texture2DMS = new ShaderResourceViewDescription.Texture2DMultisampledResource()
-                    {
-
-                    },
-                };
-
-                dsv = new EngineDepthStencilView(graphics.Device, depthMap, dsDescription);
-                srv = new EngineShaderResourceView(graphics.Device, depthMap, rvDescription);
             }
         }
     }

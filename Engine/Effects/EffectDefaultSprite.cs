@@ -1,5 +1,12 @@
 ﻿using SharpDX;
 using System;
+using Device = SharpDX.Direct3D11.Device;
+using EffectMatrixVariable = SharpDX.Direct3D11.EffectMatrixVariable;
+using EffectScalarVariable = SharpDX.Direct3D11.EffectScalarVariable;
+using EffectShaderResourceVariable = SharpDX.Direct3D11.EffectShaderResourceVariable;
+using EffectTechnique = SharpDX.Direct3D11.EffectTechnique;
+using EffectVectorVariable = SharpDX.Direct3D11.EffectVectorVariable;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
 
 namespace Engine.Effects
 {
@@ -13,57 +20,57 @@ namespace Engine.Effects
         /// <summary>
         /// Position color drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique PositionColor = null;
+        protected readonly EffectTechnique PositionColor = null;
         /// <summary>
         /// Position texture technique
         /// </summary>
-        protected readonly EngineEffectTechnique PositionTexture = null;
+        protected readonly EffectTechnique PositionTexture = null;
         /// <summary>
         /// Position texture using red channer as gray-scale technique
         /// </summary>
-        protected readonly EngineEffectTechnique PositionTextureRED = null;
+        protected readonly EffectTechnique PositionTextureRED = null;
         /// <summary>
         /// Position texture using green channer as gray-scale technique
         /// </summary>
-        protected readonly EngineEffectTechnique PositionTextureGREEN = null;
+        protected readonly EffectTechnique PositionTextureGREEN = null;
         /// <summary>
         /// Position texture using blue channer as gray-scale technique
         /// </summary>
-        protected readonly EngineEffectTechnique PositionTextureBLUE = null;
+        protected readonly EffectTechnique PositionTextureBLUE = null;
         /// <summary>
         /// Position texture using alpha channer as gray-scale technique
         /// </summary>
-        protected readonly EngineEffectTechnique PositionTextureALPHA = null;
+        protected readonly EffectTechnique PositionTextureALPHA = null;
         /// <summary>
         /// Position texture without alpha channel
         /// </summary>
-        protected readonly EngineEffectTechnique PositionTextureNOALPHA = null;
+        protected readonly EffectTechnique PositionTextureNOALPHA = null;
 
         /// <summary>
         /// World matrix effect variable
         /// </summary>
-        private EngineEffectVariableMatrix world = null;
+        private EffectMatrixVariable world = null;
         /// <summary>
         /// World view projection effect variable
         /// </summary>
-        private EngineEffectVariableMatrix worldViewProjection = null;
+        private EffectMatrixVariable worldViewProjection = null;
         /// <summary>
         /// Texture index effect variable
         /// </summary>
-        private EngineEffectVariableScalar textureIndex = null;
+        private EffectScalarVariable textureIndex = null;
         /// <summary>
         /// Color effect variable
         /// </summary>
-        private EngineEffectVariableVector color = null;
+        private EffectVectorVariable color = null;
         /// <summary>
         /// Texture effect variable
         /// </summary>
-        private EngineEffectVariableTexture textures = null;
+        private EffectShaderResourceVariable textures = null;
 
         /// <summary>
         /// Current texture array
         /// </summary>
-        private EngineShaderResourceView currentTextures = null;
+        private ShaderResourceView currentTextures = null;
 
         /// <summary>
         /// World matrix
@@ -124,7 +131,7 @@ namespace Engine.Effects
         /// <summary>
         /// Texture
         /// </summary>
-        protected EngineShaderResourceView Textures
+        protected ShaderResourceView Textures
         {
             get
             {
@@ -146,11 +153,11 @@ namespace Engine.Effects
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="graphics">Graphics device</param>
+        /// <param name="device">Graphics device</param>
         /// <param name="effect">Effect code</param>
         /// <param name="compile">Compile code</param>
-        public EffectDefaultSprite(Graphics graphics, byte[] effect, bool compile)
-            : base(graphics, effect, compile)
+        public EffectDefaultSprite(Device device, byte[] effect, bool compile)
+            : base(device, effect, compile)
         {
             this.PositionColor = this.Effect.GetTechniqueByName("PositionColor");
             this.PositionTexture = this.Effect.GetTechniqueByName("PositionTexture");
@@ -160,11 +167,11 @@ namespace Engine.Effects
             this.PositionTextureBLUE = this.Effect.GetTechniqueByName("PositionTextureBLUE");
             this.PositionTextureALPHA = this.Effect.GetTechniqueByName("PositionTextureALPHA");
 
-            this.world = this.Effect.GetVariableMatrix("gWorld");
-            this.worldViewProjection = this.Effect.GetVariableMatrix("gWorldViewProjection");
-            this.textureIndex = this.Effect.GetVariableScalar("gTextureIndex");
-            this.color = this.Effect.GetVariableVector("gColor");
-            this.textures = this.Effect.GetVariableTexture("gTextureArray");
+            this.world = this.Effect.GetVariableByName("gWorld").AsMatrix();
+            this.worldViewProjection = this.Effect.GetVariableByName("gWorldViewProjection").AsMatrix();
+            this.textureIndex = this.Effect.GetVariableByName("gTextureIndex").AsScalar();
+            this.color = this.Effect.GetVariableByName("gColor").AsVector();
+            this.textures = this.Effect.GetVariableByName("gTextureArray").AsShaderResource();
         }
         /// <summary>
         /// Get technique by vertex type
@@ -174,7 +181,7 @@ namespace Engine.Effects
         /// <param name="stage">Stage</param>
         /// <param name="mode">Mode</param>
         /// <returns>Returns the technique to process the specified vertex type in the specified pipeline stage</returns>
-        public override EngineEffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
+        public override EffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
         {
             if (stage == DrawingStages.Drawing)
             {
@@ -205,7 +212,7 @@ namespace Engine.Effects
         /// <param name="mode">Mode</param>
         /// <param name="channel">Color channel</param>
         /// <returns>Returns the technique to process the specified vertex type in the specified pipeline stage</returns>
-        public virtual EngineEffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode, SpriteTextureChannelsEnum channel)
+        public virtual EffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode, SpriteTextureChannelsEnum channel)
         {
             if (stage == DrawingStages.Drawing)
             {
@@ -254,7 +261,7 @@ namespace Engine.Effects
         /// <param name="textureIndex">Texture index</param>
         public void UpdatePerObject(
             Color4 color,
-            EngineShaderResourceView texture,
+            ShaderResourceView texture,
             int textureIndex)
         {
             this.Color = color;

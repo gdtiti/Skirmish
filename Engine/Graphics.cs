@@ -2,12 +2,43 @@
 using SharpDX.Direct3D;
 using SharpDX.DXGI;
 using System;
+using BindFlags = SharpDX.Direct3D11.BindFlags;
+using BlendOperation = SharpDX.Direct3D11.BlendOperation;
+using BlendOption = SharpDX.Direct3D11.BlendOption;
+using BlendState = SharpDX.Direct3D11.BlendState;
+using BlendStateDescription = SharpDX.Direct3D11.BlendStateDescription;
+using Buffer = SharpDX.Direct3D11.Buffer;
+using ColorWriteMaskFlags = SharpDX.Direct3D11.ColorWriteMaskFlags;
+using Comparison = SharpDX.Direct3D11.Comparison;
+using CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags;
+using CullMode = SharpDX.Direct3D11.CullMode;
+using DepthStencilClearFlags = SharpDX.Direct3D11.DepthStencilClearFlags;
+using DepthStencilOperationDescription = SharpDX.Direct3D11.DepthStencilOperationDescription;
+using DepthStencilState = SharpDX.Direct3D11.DepthStencilState;
+using DepthStencilStateDescription = SharpDX.Direct3D11.DepthStencilStateDescription;
+using DepthStencilView = SharpDX.Direct3D11.DepthStencilView;
+using DepthStencilViewDescription = SharpDX.Direct3D11.DepthStencilViewDescription;
+using DepthStencilViewDimension = SharpDX.Direct3D11.DepthStencilViewDimension;
+using DepthWriteMask = SharpDX.Direct3D11.DepthWriteMask;
+using Device = SharpDX.Direct3D11.Device;
+using DeviceContext = SharpDX.Direct3D11.DeviceContext;
+using DeviceCreationFlags = SharpDX.Direct3D11.DeviceCreationFlags;
+using FillMode = SharpDX.Direct3D11.FillMode;
+using InputLayout = SharpDX.Direct3D11.InputLayout;
+using RasterizerState = SharpDX.Direct3D11.RasterizerState;
+using RasterizerStateDescription = SharpDX.Direct3D11.RasterizerStateDescription;
+using RenderTargetView = SharpDX.Direct3D11.RenderTargetView;
+using Resource = SharpDX.Direct3D11.Resource;
+using ResourceOptionFlags = SharpDX.Direct3D11.ResourceOptionFlags;
+using ResourceUsage = SharpDX.Direct3D11.ResourceUsage;
+using StencilOperation = SharpDX.Direct3D11.StencilOperation;
+using Texture2D = SharpDX.Direct3D11.Texture2D;
+using Texture2DDescription = SharpDX.Direct3D11.Texture2DDescription;
+using VertexBufferBinding = SharpDX.Direct3D11.VertexBufferBinding;
 
 namespace Engine
 {
-    using Engine.Common;
     using Engine.Helpers;
-    using SharpDX.Direct3D11;
 
     /// <summary>
     /// Graphics class
@@ -46,7 +77,7 @@ namespace Engine
         /// <summary>
         /// Render target view
         /// </summary>
-        private EngineRenderTargetView renderTargetView = null;
+        private RenderTargetView renderTargetView = null;
         /// <summary>
         /// Depth stencil buffer
         /// </summary>
@@ -54,7 +85,7 @@ namespace Engine
         /// <summary>
         /// Depth stencil view
         /// </summary>
-        private EngineDepthStencilView depthStencilView = null;
+        private DepthStencilView depthStencilView = null;
 
         /// <summary>
         /// Current depth-stencil state
@@ -209,7 +240,7 @@ namespace Engine
         /// <summary>
         /// Gets the default render target
         /// </summary>
-        public EngineRenderTargetView DefaultRenderTarget
+        public RenderTargetView DefaultRenderTarget
         {
             get
             {
@@ -219,7 +250,7 @@ namespace Engine
         /// <summary>
         /// Gets the default depth stencil buffer
         /// </summary>
-        public EngineDepthStencilView DefaultDepthStencil
+        public DepthStencilView DefaultDepthStencil
         {
             get
             {
@@ -375,7 +406,7 @@ namespace Engine
 
             using (Resource backBuffer = Resource.FromSwapChain<Texture2D>(swapChain, 0))
             {
-                this.renderTargetView = new EngineRenderTargetView(this.Device, backBuffer);
+                this.renderTargetView = new RenderTargetView(this.Device, backBuffer);
             }
 
             #endregion
@@ -398,7 +429,7 @@ namespace Engine
                     OptionFlags = ResourceOptionFlags.None,
                 });
 
-            this.depthStencilView = new EngineDepthStencilView(
+            this.depthStencilView = new DepthStencilView(
                 this.Device,
                 this.depthStencilBuffer,
                 new DepthStencilViewDescription()
@@ -907,13 +938,13 @@ namespace Engine
         public void Begin()
         {
             this.DeviceContext.ClearDepthStencilView(
-                this.depthStencilView.DSV,
+                this.depthStencilView,
                 DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil,
                 1.0f,
                 0);
 
             this.DeviceContext.ClearRenderTargetView(
-                this.renderTargetView.RTV[0],
+                this.renderTargetView,
                 GameEnvironment.Background);
         }
         /// <summary>
@@ -943,7 +974,7 @@ namespace Engine
         /// <param name="clear">Indicates whether the target and stencil buffer must be cleared</param>
         public void SetDefaultRenderTarget(bool clear = true)
         {
-            this.SetRenderTargets(this.renderTargetView, clear, GameEnvironment.Background, this.depthStencilView, clear);
+            this.SetRenderTarget(this.renderTargetView, clear, GameEnvironment.Background, this.depthStencilView, clear);
         }
         /// <summary>
         /// Sets viewport
@@ -962,6 +993,34 @@ namespace Engine
             this.DeviceContext.Rasterizer.SetViewport(viewport);
         }
         /// <summary>
+        /// Set render target
+        /// </summary>
+        /// <param name="renderTarget">Render target</param>
+        /// <param name="clearRT">Indicates whether the target must be cleared</param>
+        /// <param name="clearRTColor">Target clear color</param>
+        /// <param name="depthMap">Depth map</param>
+        /// <param name="clearDS">Indicates whether the stencil buffer must be cleared</param>
+        /// <param name="clearDSFlags">Stencil cleraring flags</param>
+        public void SetRenderTarget(RenderTargetView renderTarget, bool clearRT, Color4 clearRTColor, DepthStencilView depthMap, bool clearDS, DepthStencilClearFlags clearDSFlags = DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil)
+        {
+            this.DeviceContext.OutputMerger.SetTargets(depthMap, renderTarget);
+
+            if (renderTarget != null && clearRT)
+            {
+                this.DeviceContext.ClearRenderTargetView(
+                    renderTarget,
+                    clearRTColor);
+            }
+
+            if (depthMap != null && clearDS)
+            {
+                this.DeviceContext.ClearDepthStencilView(
+                    depthMap,
+                    clearDSFlags,
+                    1.0f, 0);
+            }
+        }
+        /// <summary>
         /// Set render targets
         /// </summary>
         /// <param name="renderTarget">Render target</param>
@@ -971,28 +1030,24 @@ namespace Engine
         /// <param name="depthMap">Depth map</param>
         /// <param name="clearDS">Indicates whether the stencil buffer must be cleared</param>
         /// <param name="clearDSFlags">Stencil cleraring flags</param>
-        public void SetRenderTargets(EngineRenderTargetView renderTargets, bool clearRT, Color4 clearRTColor, EngineDepthStencilView depthMap, bool clearDS, DepthStencilClearFlags clearDSFlags = DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil)
+        public void SetRenderTargets(RenderTargetView[] renderTargets, bool clearRT, Color4 clearRTColor, DepthStencilView depthMap, bool clearDS, DepthStencilClearFlags clearDSFlags = DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil)
         {
-            var dsv = depthMap != null ? depthMap.DSV : null;
-            var rtv = renderTargets != null ? renderTargets.RTV.ToArray() : null;
-            var rtvCount = renderTargets != null ? renderTargets.Count : 0;
+            this.DeviceContext.OutputMerger.SetTargets(depthMap, renderTargets.Length, renderTargets);
 
-            this.DeviceContext.OutputMerger.SetTargets(dsv, rtvCount, rtv);
-
-            if (clearRT && rtv != null && rtvCount > 0)
+            if (clearRT && renderTargets != null && renderTargets.Length > 0)
             {
-                for (int i = 0; i < rtvCount; i++)
+                for (int i = 0; i < renderTargets.Length; i++)
                 {
                     this.DeviceContext.ClearRenderTargetView(
-                        rtv[i],
+                        renderTargets[i],
                         clearRTColor);
                 }
             }
 
-            if (clearDS && dsv != null)
+            if (clearDS && depthMap != null)
             {
                 this.DeviceContext.ClearDepthStencilView(
-                    dsv,
+                    depthMap,
                     clearDSFlags,
                     1.0f, 0);
             }
@@ -1002,10 +1057,10 @@ namespace Engine
         /// </summary>
         /// <param name="depthMap">Depth buffer</param>
         /// <param name="clearDSFlags">Clear flags</param>
-        public void ClearDepthStencilBuffer(EngineDepthStencilView depthMap, DepthStencilClearFlags clearDSFlags = DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil)
+        public void ClearDepthStencilBuffer(DepthStencilView depthMap, DepthStencilClearFlags clearDSFlags = DepthStencilClearFlags.Depth | DepthStencilClearFlags.Stencil)
         {
             this.DeviceContext.ClearDepthStencilView(
-                depthMap.DSV,
+                depthMap,
                 clearDSFlags,
                 1.0f, 0);
         }
@@ -1153,7 +1208,7 @@ namespace Engine
         /// Bind an array of vertex buffers to the input-assembler stage.
         /// </summary>
         /// <param name="firstSlot">The first input slot for binding</param>
-        /// <param name="vertexBufferBindings">A reference to an array of VertexBufferBinding</param>
+        /// <param name="vertexBufferBindings">A reference to an array of SharpDX.Direct3D11.VertexBufferBinding</param>
         public void IASetVertexBuffers(int firstSlot, params VertexBufferBinding[] vertexBufferBindings)
         {
             if (this.currentVertexBufferFirstSlot != firstSlot || this.currentVertexBufferBindings != vertexBufferBindings)
@@ -1168,7 +1223,7 @@ namespace Engine
         /// <summary>
         /// Bind an index buffer to the input-assembler stage.
         /// </summary>
-        /// <param name="indexBufferRef">A reference to an Buffer object</param>
+        /// <param name="indexBufferRef">A reference to an SharpDX.Direct3D11.Buffer object</param>
         /// <param name="format">A SharpDX.DXGI.Format that specifies the format of the data in the index buffer</param>
         /// <param name="offset">Offset (in bytes) from the start of the index buffer to the first index to use</param>
         public void IASetIndexBuffer(Buffer indexBufferRef, Format format, int offset)

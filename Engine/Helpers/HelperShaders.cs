@@ -1,13 +1,12 @@
-﻿using SharpDX;
-using SharpDX.D3DCompiler;
-using System;
+﻿using System;
 using System.IO;
+using SharpDX;
+using SharpDX.D3DCompiler;
+using SharpDX.Direct3D11;
 
 namespace Engine.Helpers
 {
-    using Common;
     using Engine.Properties;
-    using SharpDX.Direct3D11;
 
     /// <summary>
     /// Helper methods for shaders and effects
@@ -301,15 +300,15 @@ namespace Engine.Helpers
         /// <summary>
         /// Loads an effect from byte code
         /// </summary>
-        /// <param name="graphics">Graphics device</param>
+        /// <param name="device">Graphics device</param>
         /// <param name="bytes">Byte code</param>
         /// <returns>Returns loaded effect</returns>
-        public static EngineEffect CompileEffect(
-            this Graphics graphics,
+        public static Effect CompileEffect(
+            this Device device,
             byte[] bytes)
         {
-            using (var includeManager = new ShaderIncludeManager())
-            using (var cmpResult = ShaderBytecode.Compile(
+            using (ShaderIncludeManager includeManager = new ShaderIncludeManager())
+            using (CompilationResult cmpResult = ShaderBytecode.Compile(
                 bytes,
                 null,
                 FXProfile,
@@ -318,36 +317,32 @@ namespace Engine.Helpers
                 null,
                 includeManager))
             {
-                var effect = new Effect(
-                    graphics.Device,
+                return new Effect(
+                    device,
                     cmpResult.Bytecode.Data,
                     EffectFlags.None);
-
-                return new EngineEffect(effect);
             }
         }
         /// <summary>
         /// Loads an effect from pre-compiled file
         /// </summary>
-        /// <param name="graphics">Graphics device</param>
+        /// <param name="device">Graphics device</param>
         /// <param name="bytes">Pre-compiled byte code</param>
         /// <returns>Returns loaded effect</returns>
-        public static EngineEffect LoadEffect(
-            this Graphics graphics,
+        public static Effect LoadEffect(
+            this Device device,
             byte[] bytes)
         {
-            using (var ms = new MemoryStream(bytes))
+            using (MemoryStream ms = new MemoryStream(bytes))
             {
                 ms.Position = 0;
 
-                using (var effectCode = ShaderBytecode.FromStream(ms))
+                using (ShaderBytecode effectCode = ShaderBytecode.FromStream(ms))
                 {
-                    var effect = new Effect(
-                        graphics.Device,
+                    return new Effect(
+                        device,
                         effectCode.Data,
                         EffectFlags.None);
-
-                    return new EngineEffect(effect);
                 }
             }
         }

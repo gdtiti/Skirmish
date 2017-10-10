@@ -169,7 +169,7 @@ namespace Engine
 
             this.Graphics = new Graphics(this.Form, vsyncEnabled, refreshRate, multiSampling);
 
-            DrawerPool.Initialize(this.Graphics);
+            DrawerPool.Initialize(this.Graphics.Device);
         }
         /// <summary>
         /// Begins render loop

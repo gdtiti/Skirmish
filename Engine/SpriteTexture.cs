@@ -1,5 +1,6 @@
 ﻿using SharpDX;
 using SharpDX.Direct3D;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
 
 namespace Engine
 {
@@ -43,7 +44,7 @@ namespace Engine
         /// <summary>
         /// Texture
         /// </summary>
-        public EngineShaderResourceView Texture { get; set; }
+        public ShaderResourceView Texture { get; set; }
         /// <summary>
         /// Drawing channels
         /// </summary>
@@ -141,9 +142,9 @@ namespace Engine
             DrawerPool.EffectDefaultSprite.UpdatePerFrame(this.Manipulator.LocalTransform, this.viewProjection);
             DrawerPool.EffectDefaultSprite.UpdatePerObject(Color.White, this.Texture, 0);
 
-            for (int p = 0; p < technique.PassCount; p++)
+            for (int p = 0; p < technique.Description.PassCount; p++)
             {
-                technique.Apply(this.Game.Graphics, p, 0);
+                technique.GetPassByIndex(p).Apply(this.Graphics.DeviceContext, 0);
 
                 this.Graphics.DeviceContext.DrawIndexed(this.indexBuffer.Count, this.indexBuffer.Offset, this.vertexBuffer.Offset);
 

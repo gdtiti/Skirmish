@@ -1,5 +1,11 @@
 ﻿using SharpDX;
 using System;
+using Device = SharpDX.Direct3D11.Device;
+using EffectMatrixVariable = SharpDX.Direct3D11.EffectMatrixVariable;
+using EffectScalarVariable = SharpDX.Direct3D11.EffectScalarVariable;
+using EffectShaderResourceVariable = SharpDX.Direct3D11.EffectShaderResourceVariable;
+using EffectTechnique = SharpDX.Direct3D11.EffectTechnique;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
 
 namespace Engine.Effects
 {
@@ -13,117 +19,117 @@ namespace Engine.Effects
         /// <summary>
         /// Position color drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique ShadowMapPositionColor = null;
+        protected readonly EffectTechnique ShadowMapPositionColor = null;
         /// <summary>
         /// Position color skinned drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique ShadowMapPositionColorSkinned = null;
+        protected readonly EffectTechnique ShadowMapPositionColorSkinned = null;
         /// <summary>
         /// Position normal color drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique ShadowMapPositionNormalColor = null;
+        protected readonly EffectTechnique ShadowMapPositionNormalColor = null;
         /// <summary>
         /// Position normal color skinned drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique ShadowMapPositionNormalColorSkinned = null;
+        protected readonly EffectTechnique ShadowMapPositionNormalColorSkinned = null;
         /// <summary>
         /// Position texture drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique ShadowMapPositionTexture = null;
+        protected readonly EffectTechnique ShadowMapPositionTexture = null;
         /// <summary>
         /// Position texture skinned drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique ShadowMapPositionTextureSkinned = null;
+        protected readonly EffectTechnique ShadowMapPositionTextureSkinned = null;
         /// <summary>
         /// Position normal texture drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique ShadowMapPositionNormalTexture = null;
+        protected readonly EffectTechnique ShadowMapPositionNormalTexture = null;
         /// <summary>
         /// Position normal texture skinned drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique ShadowMapPositionNormalTextureSkinned = null;
+        protected readonly EffectTechnique ShadowMapPositionNormalTextureSkinned = null;
         /// <summary>
         /// Position normal texture tangent drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique ShadowMapPositionNormalTextureTangent = null;
+        protected readonly EffectTechnique ShadowMapPositionNormalTextureTangent = null;
         /// <summary>
         /// Position normal texture tangent skinned drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique ShadowMapPositionNormalTextureTangentSkinned = null;
+        protected readonly EffectTechnique ShadowMapPositionNormalTextureTangentSkinned = null;
         /// <summary>
         /// Position color drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique InstancingShadowMapPositionColor = null;
+        protected readonly EffectTechnique InstancingShadowMapPositionColor = null;
         /// <summary>
         /// Position color skinned drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique InstancingShadowMapPositionColorSkinned = null;
+        protected readonly EffectTechnique InstancingShadowMapPositionColorSkinned = null;
         /// <summary>
         /// Position normal color drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique InstancingShadowMapPositionNormalColor = null;
+        protected readonly EffectTechnique InstancingShadowMapPositionNormalColor = null;
         /// <summary>
         /// Position normal color skinned drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique InstancingShadowMapPositionNormalColorSkinned = null;
+        protected readonly EffectTechnique InstancingShadowMapPositionNormalColorSkinned = null;
         /// <summary>
         /// Position texture drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique InstancingShadowMapPositionTexture = null;
+        protected readonly EffectTechnique InstancingShadowMapPositionTexture = null;
         /// <summary>
         /// Position texture skinned drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique InstancingShadowMapPositionTextureSkinned = null;
+        protected readonly EffectTechnique InstancingShadowMapPositionTextureSkinned = null;
         /// <summary>
         /// Position normal texture drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique InstancingShadowMapPositionNormalTexture = null;
+        protected readonly EffectTechnique InstancingShadowMapPositionNormalTexture = null;
         /// <summary>
         /// Position normal texture skinned drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique InstancingShadowMapPositionNormalTextureSkinned = null;
+        protected readonly EffectTechnique InstancingShadowMapPositionNormalTextureSkinned = null;
         /// <summary>
         /// Position normal texture tangent drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique InstancingShadowMapPositionNormalTextureTangent = null;
+        protected readonly EffectTechnique InstancingShadowMapPositionNormalTextureTangent = null;
         /// <summary>
         /// Position normal texture tangent skinned drawing technique
         /// </summary>
-        protected readonly EngineEffectTechnique InstancingShadowMapPositionNormalTextureTangentSkinned = null;
+        protected readonly EffectTechnique InstancingShadowMapPositionNormalTextureTangentSkinned = null;
 
         /// <summary>
         /// World view projection effect variable
         /// </summary>
-        private EngineEffectVariableMatrix worldViewProjection = null;
+        private EffectMatrixVariable worldViewProjection = null;
         /// <summary>
         /// Animation data effect variable
         /// </summary>
-        private EngineEffectVariableScalar animationOffset = null;
+        private EffectScalarVariable animationOffset = null;
         /// <summary>
         /// Texture index effect variable
         /// </summary>
-        private EngineEffectVariableScalar textureIndex = null;
+        private EffectScalarVariable textureIndex = null;
         /// <summary>
         /// Animation palette width effect variable
         /// </summary>
-        private EngineEffectVariableScalar animationPaletteWidth = null;
+        private EffectScalarVariable animationPaletteWidth = null;
         /// <summary>
         /// Animation palette
         /// </summary>
-        private EngineEffectVariableTexture animationPalette = null;
+        private EffectShaderResourceVariable animationPalette = null;
         /// <summary>
         /// Diffuse map effect variable
         /// </summary>
-        private EngineEffectVariableTexture diffuseMap = null;
+        private EffectShaderResourceVariable diffuseMap = null;
 
         /// <summary>
         /// Current animation palette
         /// </summary>
-        private EngineShaderResourceView currentAnimationPalette = null;
+        private ShaderResourceView currentAnimationPalette = null;
         /// <summary>
         /// Current diffuse map
         /// </summary>
-        private EngineShaderResourceView currentDiffuseMap = null;
+        private ShaderResourceView currentDiffuseMap = null;
 
         /// <summary>
         /// World view projection matrix
@@ -184,7 +190,7 @@ namespace Engine.Effects
         /// <summary>
         /// Animation palette
         /// </summary>
-        protected EngineShaderResourceView AnimationPalette
+        protected ShaderResourceView AnimationPalette
         {
             get
             {
@@ -205,7 +211,7 @@ namespace Engine.Effects
         /// <summary>
         /// Diffuse map
         /// </summary>
-        protected EngineShaderResourceView DiffuseMap
+        protected ShaderResourceView DiffuseMap
         {
             get
             {
@@ -227,11 +233,11 @@ namespace Engine.Effects
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="graphics">Graphics device</param>
+        /// <param name="device">Graphics device</param>
         /// <param name="effect">Effect code</param>
         /// <param name="compile">Compile code</param>
-        public EffectShadowBasic(Graphics graphics, byte[] effect, bool compile)
-            : base(graphics, effect, compile)
+        public EffectShadowBasic(Device device, byte[] effect, bool compile)
+            : base(device, effect, compile)
         {
             this.ShadowMapPositionColor = this.Effect.GetTechniqueByName("ShadowMapPositionColor");
             this.ShadowMapPositionColorSkinned = this.Effect.GetTechniqueByName("ShadowMapPositionColorSkinned");
@@ -254,12 +260,12 @@ namespace Engine.Effects
             this.InstancingShadowMapPositionNormalTextureTangent = this.Effect.GetTechniqueByName("ShadowMapPositionNormalTextureTangentI");
             this.InstancingShadowMapPositionNormalTextureTangentSkinned = this.Effect.GetTechniqueByName("ShadowMapPositionNormalTextureTangentSkinnedI");
 
-            this.animationPaletteWidth = this.Effect.GetVariableScalar("gAnimationPaletteWidth");
-            this.animationPalette = this.Effect.GetVariableTexture("gAnimationPalette");
-            this.worldViewProjection = this.Effect.GetVariableMatrix("gVSWorldViewProjection");
-            this.animationOffset = this.Effect.GetVariableScalar("gVSAnimationOffset");
-            this.diffuseMap = this.Effect.GetVariableTexture("gPSDiffuseMapArray");
-            this.textureIndex = this.Effect.GetVariableScalar("gPSTextureIndex");
+            this.animationPaletteWidth = this.Effect.GetVariableByName("gAnimationPaletteWidth").AsScalar();
+            this.animationPalette = this.Effect.GetVariableByName("gAnimationPalette").AsShaderResource();
+            this.worldViewProjection = this.Effect.GetVariableByName("gVSWorldViewProjection").AsMatrix();
+            this.animationOffset = this.Effect.GetVariableByName("gVSAnimationOffset").AsScalar();
+            this.diffuseMap = this.Effect.GetVariableByName("gPSDiffuseMapArray").AsShaderResource();
+            this.textureIndex = this.Effect.GetVariableByName("gPSTextureIndex").AsScalar();
         }
         /// <summary>
         /// Get technique by vertex type
@@ -269,7 +275,7 @@ namespace Engine.Effects
         /// <param name="stage">Stage</param>
         /// <param name="mode">Mode</param>
         /// <returns>Returns the technique to process the specified vertex type in the specified pipeline stage</returns>
-        public override EngineEffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
+        public override EffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
         {
             if (stage == DrawingStages.Drawing)
             {
@@ -318,7 +324,7 @@ namespace Engine.Effects
         /// <param name="animationPalette">Animation palette texture</param>
         /// <param name="animationPaletteWith">Animation palette texture width</param>
         public void UpdateGlobals(
-            EngineShaderResourceView animationPalette,
+            ShaderResourceView animationPalette,
             uint animationPaletteWidth)
         {
             this.AnimationPalette = animationPalette;
@@ -341,7 +347,7 @@ namespace Engine.Effects
         /// <param name="textureIndex">Texture index</param>
         /// <param name="animationOffset">Animation index</param>
         public void UpdatePerObject(
-            EngineShaderResourceView diffuseMap,
+            ShaderResourceView diffuseMap,
             uint textureIndex,
             uint animationOffset)
         {

@@ -1,11 +1,13 @@
 ﻿using System.Collections.Generic;
+using BindFlags = SharpDX.Direct3D11.BindFlags;
+using ResourceUsage = SharpDX.Direct3D11.ResourceUsage;
 
 namespace Engine.Helpers
 {
     /// <summary>
     /// Resource status class
     /// </summary>
-    class ResourceStatus : List<ResourceStatusItem>
+    public class ResourceStatus : List<ResourceStatusItem>
     {
         /// <summary>
         /// Total resources size
@@ -24,7 +26,7 @@ namespace Engine.Helpers
         /// <param name="binding">Resource binding</param>
         /// <param name="size">Size in bytes</param>
         /// <param name="elements">Number of elements</param>
-        public void Add(string name, int usage, int binding, long size, int elements)
+        public void Add(string name, ResourceUsage usage, BindFlags binding, long size, int elements)
         {
             base.Add(new ResourceStatusItem()
             {

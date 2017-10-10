@@ -1,9 +1,8 @@
-﻿using System;
+﻿using SharpDX.Direct3D11;
+using System;
 
 namespace Engine
 {
-    using Engine.Common;
-
     /// <summary>
     /// Scene renderer interface
     /// </summary>
@@ -26,6 +25,6 @@ namespace Engine
         /// </summary>
         /// <param name="result">Resource type</param>
         /// <returns>Returns renderer specified resource, if renderer produces that resource.</returns>
-        EngineShaderResourceView GetResource(SceneRendererResultEnum result);
+        ShaderResourceView GetResource(SceneRendererResultEnum result);
     }
 }

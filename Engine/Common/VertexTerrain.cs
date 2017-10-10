@@ -1,11 +1,10 @@
 ﻿using SharpDX;
+using SharpDX.Direct3D11;
 using System;
 using System.Runtime.InteropServices;
 
 namespace Engine.Common
 {
-    using SharpDX.Direct3D11;
-
     /// <summary>
     /// Terrain vertex format
     /// </summary>

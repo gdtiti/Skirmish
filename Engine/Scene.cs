@@ -1,4 +1,5 @@
 ﻿using SharpDX;
+using SharpDX.Direct3D11;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -560,11 +561,11 @@ namespace Engine
         /// </summary>
         protected virtual void UpdateGlobals()
         {
-            EngineShaderResourceView materialPalette;
+            ShaderResourceView materialPalette;
             uint materialPaletteWidth;
             this.UpdateMaterialPalette(out materialPalette, out materialPaletteWidth);
 
-            EngineShaderResourceView animationPalette;
+            ShaderResourceView animationPalette;
             uint animationPaletteWidth;
             this.UpdateAnimationPalette(out animationPalette, out animationPaletteWidth);
 
@@ -575,7 +576,7 @@ namespace Engine
         /// </summary>
         /// <param name="materialPalette">Material palette</param>
         /// <param name="materialPaletteWidth">Material palette width</param>
-        private void UpdateMaterialPalette(out EngineShaderResourceView materialPalette, out uint materialPaletteWidth)
+        private void UpdateMaterialPalette(out ShaderResourceView materialPalette, out uint materialPaletteWidth)
         {
             List<MeshMaterial> mats = new List<MeshMaterial>();
 
@@ -631,7 +632,7 @@ namespace Engine
         /// </summary>
         /// <param name="animationPalette">Animation palette</param>
         /// <param name="animationPaletteWidth">Animation palette width</param>
-        private void UpdateAnimationPalette(out EngineShaderResourceView animationPalette, out uint animationPaletteWidth)
+        private void UpdateAnimationPalette(out ShaderResourceView animationPalette, out uint animationPaletteWidth)
         {
             List<SkinningData> skData = new List<SkinningData>();
 

@@ -1,5 +1,10 @@
 ﻿using SharpDX;
 using System;
+using Device = SharpDX.Direct3D11.Device;
+using EffectMatrixVariable = SharpDX.Direct3D11.EffectMatrixVariable;
+using EffectScalarVariable = SharpDX.Direct3D11.EffectScalarVariable;
+using EffectTechnique = SharpDX.Direct3D11.EffectTechnique;
+using EffectVectorVariable = SharpDX.Direct3D11.EffectVectorVariable;
 
 namespace Engine.Effects
 {
@@ -13,40 +18,40 @@ namespace Engine.Effects
         /// <summary>
         /// Default sky scattering technique
         /// </summary>
-        protected readonly EngineEffectTechnique SkyScattering = null;
+        protected readonly EffectTechnique SkyScattering = null;
 
         /// <summary>
         /// World view projection effect variable
         /// </summary>
-        private EngineEffectVariableMatrix worldViewProjection = null;
+        private EffectMatrixVariable worldViewProjection = null;
         /// <summary>
         /// Sphere radii effect variable
         /// </summary>
-        private EngineEffectVariableVector sphereRadii = null;
+        private EffectVectorVariable sphereRadii = null;
         /// <summary>
         /// 
         /// </summary>
-        private EngineEffectVariableVector scatteringCoefficients = null;
+        private EffectVectorVariable scatteringCoefficients = null;
         /// <summary>
         /// 
         /// </summary>
-        private EngineEffectVariableVector inverseWaveLength = null;
+        private EffectVectorVariable inverseWaveLength = null;
         /// <summary>
         /// 
         /// </summary>
-        private EngineEffectVariableVector misc = null;
+        private EffectVectorVariable misc = null;
         /// <summary>
         /// Back color variable
         /// </summary>
-        private EngineEffectVariableVector backColor = null;
+        private EffectVectorVariable backColor = null;
         /// <summary>
         /// Light direction effect variable
         /// </summary>
-        private EngineEffectVariableVector lightDirectionWorld = null;
+        private EffectVectorVariable lightDirectionWorld = null;
         /// <summary>
         /// HDR exposure effect variable
         /// </summary>
-        private EngineEffectVariableScalar hdrExposure = null;
+        private EffectScalarVariable hdrExposure = null;
 
         /// <summary>
         /// World view projection matrix
@@ -170,22 +175,22 @@ namespace Engine.Effects
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="graphics">Graphics device</param>
+        /// <param name="device">Graphics device</param>
         /// <param name="effect">Effect code</param>
         /// <param name="compile">Compile code</param>
-        public EffectDefaultSkyScattering(Graphics graphics, byte[] effect, bool compile)
-            : base(graphics, effect, compile)
+        public EffectDefaultSkyScattering(Device device, byte[] effect, bool compile)
+            : base(device, effect, compile)
         {
             this.SkyScattering = this.Effect.GetTechniqueByName("SkyScattering");
 
-            this.worldViewProjection = this.Effect.GetVariableMatrix("gWorldViewProjection");
-            this.sphereRadii = this.Effect.GetVariableVector("gSphereRadii");
-            this.scatteringCoefficients = this.Effect.GetVariableVector("gScatteringCoeffs");
-            this.inverseWaveLength = this.Effect.GetVariableVector("gInvWaveLength");
-            this.misc = this.Effect.GetVariableVector("gMisc");
-            this.backColor = this.Effect.GetVariableVector("gBackColor");
-            this.lightDirectionWorld = this.Effect.GetVariableVector("gLightDirection");
-            this.hdrExposure = this.Effect.GetVariableScalar("gHDRExposure");
+            this.worldViewProjection = this.Effect.GetVariableByName("gWorldViewProjection").AsMatrix();
+            this.sphereRadii = this.Effect.GetVariableByName("gSphereRadii").AsVector();
+            this.scatteringCoefficients = this.Effect.GetVariableByName("gScatteringCoeffs").AsVector();
+            this.inverseWaveLength = this.Effect.GetVariableByName("gInvWaveLength").AsVector();
+            this.misc = this.Effect.GetVariableByName("gMisc").AsVector();
+            this.backColor = this.Effect.GetVariableByName("gBackColor").AsVector();
+            this.lightDirectionWorld = this.Effect.GetVariableByName("gLightDirection").AsVector();
+            this.hdrExposure = this.Effect.GetVariableByName("gHDRExposure").AsScalar();
         }
         /// <summary>
         /// Get technique by vertex type
@@ -195,7 +200,7 @@ namespace Engine.Effects
         /// <param name="stage">Stage</param>
         /// <param name="mode">Mode</param>
         /// <returns>Returns the technique to process the specified vertex type in the specified pipeline stage</returns>
-        public override EngineEffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
+        public override EffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
         {
             if (stage == DrawingStages.Drawing)
             {

@@ -1,4 +1,14 @@
-﻿using System;
+﻿using SharpDX;
+using System;
+using BindFlags = SharpDX.Direct3D11.BindFlags;
+using Buffer = SharpDX.Direct3D11.Buffer;
+using CpuAccessFlags = SharpDX.Direct3D11.CpuAccessFlags;
+using InputLayout = SharpDX.Direct3D11.InputLayout;
+using PrimitiveTopology = SharpDX.Direct3D.PrimitiveTopology;
+using ResourceUsage = SharpDX.Direct3D11.ResourceUsage;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
+using StreamOutputBufferBinding = SharpDX.Direct3D11.StreamOutputBufferBinding;
+using VertexBufferBinding = SharpDX.Direct3D11.VertexBufferBinding;
 
 namespace Engine
 {
@@ -6,9 +16,6 @@ namespace Engine
     using Engine.Content;
     using Engine.Effects;
     using Engine.Helpers;
-    using SharpDX;
-    using SharpDX.Direct3D;
-    using SharpDX.Direct3D11;
 
     /// <summary>
     /// Particle system
@@ -74,7 +81,7 @@ namespace Engine
         /// <summary>
         /// Particle texture
         /// </summary>
-        public EngineShaderResourceView Texture { get; private set; }
+        public ShaderResourceView Texture { get; private set; }
         /// <summary>
         /// Texture count
         /// </summary>
@@ -218,9 +225,20 @@ namespace Engine
             this.drawingBinding = new[] { new VertexBufferBinding(this.drawingBuffer, this.inputStride, 0) };
             this.streamOutBinding = new[] { new StreamOutputBufferBinding(this.streamOutBuffer, 0) };
 
-            this.streamOutInputLayout = DrawerPool.EffectDefaultGPUParticles.ParticleStreamOut.Create(game.Graphics, VertexGPUParticle.Input(BufferSlot));
-            this.rotatingInputLayout = DrawerPool.EffectDefaultGPUParticles.RotationDraw.Create(game.Graphics, VertexGPUParticle.Input(BufferSlot));
-            this.nonRotatingInputLayout = DrawerPool.EffectDefaultGPUParticles.NonRotationDraw.Create(game.Graphics, VertexGPUParticle.Input(BufferSlot));
+            this.streamOutInputLayout = new InputLayout(
+                game.Graphics.Device,
+                DrawerPool.EffectDefaultGPUParticles.ParticleStreamOut.GetPassByIndex(0).Description.Signature,
+                VertexGPUParticle.Input(BufferSlot));
+
+            this.rotatingInputLayout = new InputLayout(
+                game.Graphics.Device,
+                DrawerPool.EffectDefaultGPUParticles.RotationDraw.GetPassByIndex(0).Description.Signature,
+                VertexGPUParticle.Input(BufferSlot));
+
+            this.nonRotatingInputLayout = new InputLayout(
+                game.Graphics.Device,
+                DrawerPool.EffectDefaultGPUParticles.NonRotationDraw.GetPassByIndex(0).Description.Signature,
+                VertexGPUParticle.Input(BufferSlot));
         }
         /// <summary>
         /// Dispose resources
@@ -302,9 +320,9 @@ namespace Engine
             this.Game.Graphics.DeviceContext.StreamOutput.SetTargets(this.streamOutBinding);
             Counters.SOTargetsSet++;
 
-            for (int p = 0; p < techniqueForStreamOut.PassCount; p++)
+            for (int p = 0; p < techniqueForStreamOut.Description.PassCount; p++)
             {
-                techniqueForStreamOut.Apply(this.Game.Graphics, p, 0);
+                techniqueForStreamOut.GetPassByIndex(p).Apply(this.Game.Graphics.DeviceContext, 0);
 
                 if (this.firstRun)
                 {
@@ -371,9 +389,9 @@ namespace Engine
                 this.Game.Graphics.SetBlendDefault();
             }
 
-            for (int p = 0; p < techniqueForDrawing.PassCount; p++)
+            for (int p = 0; p < techniqueForDrawing.Description.PassCount; p++)
             {
-                techniqueForDrawing.Apply(this.Game.Graphics, p, 0);
+                techniqueForDrawing.GetPassByIndex(p).Apply(this.Game.Graphics.DeviceContext, 0);
 
                 this.Game.Graphics.DeviceContext.DrawAuto();
 

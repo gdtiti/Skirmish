@@ -1,10 +1,12 @@
-﻿
+﻿using BindFlags = SharpDX.Direct3D11.BindFlags;
+using ResourceUsage = SharpDX.Direct3D11.ResourceUsage;
+
 namespace Engine.Helpers
 {
     /// <summary>
     /// Resource status item
     /// </summary>
-    class ResourceStatusItem
+    public class ResourceStatusItem
     {
         /// <summary>
         /// Resource name
@@ -13,11 +15,11 @@ namespace Engine.Helpers
         /// <summary>
         /// Resource usage
         /// </summary>
-        public int Usage;
+        public ResourceUsage Usage;
         /// <summary>
         /// Resource binding
         /// </summary>
-        public int Binding;
+        public BindFlags Binding;
         /// <summary>
         /// Size in bytes
         /// </summary>

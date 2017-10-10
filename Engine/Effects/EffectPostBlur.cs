@@ -1,5 +1,11 @@
 ﻿using SharpDX;
 using System;
+using Device = SharpDX.Direct3D11.Device;
+using EffectMatrixVariable = SharpDX.Direct3D11.EffectMatrixVariable;
+using EffectShaderResourceVariable = SharpDX.Direct3D11.EffectShaderResourceVariable;
+using EffectTechnique = SharpDX.Direct3D11.EffectTechnique;
+using EffectVectorVariable = SharpDX.Direct3D11.EffectVectorVariable;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
 
 namespace Engine.Effects
 {
@@ -13,29 +19,29 @@ namespace Engine.Effects
         /// <summary>
         /// Position color drawing technique
         /// </summary>
-        public readonly EngineEffectTechnique Blur = null;
+        public readonly EffectTechnique Blur = null;
 
         /// <summary>
         /// World view projection effect variable
         /// </summary>
-        private EngineEffectVariableMatrix worldViewProjection = null;
+        private EffectMatrixVariable worldViewProjection = null;
         /// <summary>
         /// Blur direction effect variable
         /// </summary>
-        private EngineEffectVariableVector blurDirection = null;
+        private EffectVectorVariable blurDirection = null;
         /// <summary>
         /// Texture size effect variable
         /// </summary>
-        private EngineEffectVariableVector textureSize = null;
+        private EffectVectorVariable textureSize = null;
         /// <summary>
         /// Diffuse map effect variable
         /// </summary>
-        private EngineEffectVariableTexture diffuseMap = null;
+        private EffectShaderResourceVariable diffuseMap = null;
 
         /// <summary>
         /// Current diffuse map
         /// </summary>
-        private EngineShaderResourceView currentDiffuseMap = null;
+        private ShaderResourceView currentDiffuseMap = null;
 
         /// <summary>
         /// World view projection matrix
@@ -90,7 +96,7 @@ namespace Engine.Effects
         /// <summary>
         /// Diffuse map
         /// </summary>
-        protected EngineShaderResourceView DiffuseMap
+        protected ShaderResourceView DiffuseMap
         {
             get
             {
@@ -112,18 +118,18 @@ namespace Engine.Effects
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="graphics">Graphics device</param>
+        /// <param name="device">Graphics device</param>
         /// <param name="effect">Effect code</param>
         /// <param name="compile">Compile code</param>
-        public EffectPostBlur(Graphics graphics, byte[] effect, bool compile)
-            : base(graphics, effect, compile)
+        public EffectPostBlur(Device device, byte[] effect, bool compile)
+            : base(device, effect, compile)
         {
             this.Blur = this.Effect.GetTechniqueByName("Blur");
 
-            this.worldViewProjection = this.Effect.GetVariableMatrix("gWorldViewProjection");
-            this.blurDirection = this.Effect.GetVariableVector("gBlurDirection");
-            this.textureSize = this.Effect.GetVariableVector("gTextureSize");
-            this.diffuseMap = this.Effect.GetVariableTexture("gDiffuseMap");
+            this.worldViewProjection = this.Effect.GetVariableByName("gWorldViewProjection").AsMatrix();
+            this.blurDirection = this.Effect.GetVariableByName("gBlurDirection").AsVector();
+            this.textureSize = this.Effect.GetVariableByName("gTextureSize").AsVector();
+            this.diffuseMap = this.Effect.GetVariableByName("gDiffuseMap").AsShaderResource();
         }
         /// <summary>
         /// Get technique by vertex type
@@ -133,7 +139,7 @@ namespace Engine.Effects
         /// <param name="stage">Stage</param>
         /// <param name="mode">Mode</param>
         /// <returns>Returns the technique to process the specified vertex type in the specified pipeline stage</returns>
-        public override EngineEffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
+        public override EffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
         {
             if (stage == DrawingStages.Drawing)
             {
@@ -165,7 +171,7 @@ namespace Engine.Effects
             Matrix viewProjection,
             Vector2 direction,
             Vector2 size,
-            EngineShaderResourceView diffuseMap)
+            ShaderResourceView diffuseMap)
         {
             this.WorldViewProjection = world * viewProjection;
             this.BlurDirection = direction;

@@ -2,6 +2,7 @@
 using SharpDX.Direct3D;
 using System;
 using System.Collections.Generic;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
 
 namespace Engine
 {
@@ -29,7 +30,7 @@ namespace Engine
         /// <summary>
         /// Cube map texture
         /// </summary>
-        private EngineShaderResourceView cubeMapTexture = null;
+        private ShaderResourceView cubeMapTexture = null;
 
         /// <summary>
         /// Manipulator
@@ -100,9 +101,9 @@ namespace Engine
 
                 #endregion
 
-                for (int p = 0; p < technique.PassCount; p++)
+                for (int p = 0; p < technique.Description.PassCount; p++)
                 {
-                    technique.Apply(this.Game.Graphics, p, 0);
+                    technique.GetPassByIndex(p).Apply(this.Game.Graphics.DeviceContext, 0);
 
                     this.Game.Graphics.DeviceContext.DrawIndexed(this.indexBuffer.Count, this.indexBuffer.Offset, this.vertexBuffer.Offset);
 
@@ -115,7 +116,7 @@ namespace Engine
         /// Set the instance texture
         /// </summary>
         /// <param name="texture">Texture</param>
-        public void SetTexture(EngineShaderResourceView texture)
+        public void SetTexture(ShaderResourceView texture)
         {
             this.cubeMapTexture = texture;
         }

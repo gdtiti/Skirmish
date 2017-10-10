@@ -1,10 +1,20 @@
 ﻿using SharpDX;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Drawing.Text;
 using System.IO;
+using Bitmap = System.Drawing.Bitmap;
+using Brushes = System.Drawing.Brushes;
+using Font = System.Drawing.Font;
+using FontStyle = System.Drawing.FontStyle;
+using Graph = System.Drawing.Graphics;
+using GraphicsUnit = System.Drawing.GraphicsUnit;
+using ImageFormat = System.Drawing.Imaging.ImageFormat;
+using RectangleF = System.Drawing.RectangleF;
+using Region = System.Drawing.Region;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
+using SizeF = System.Drawing.SizeF;
+using StringFormat = System.Drawing.StringFormat;
+using TextRenderingHint = System.Drawing.Text.TextRenderingHint;
 
 namespace Engine.Common
 {
@@ -60,7 +70,7 @@ namespace Engine.Common
         /// <summary>
         /// Font texture
         /// </summary>
-        public EngineShaderResourceView Texture { get; private set; }
+        public ShaderResourceView Texture { get; private set; }
         /// <summary>
         /// Gets map keys
         /// </summary>
@@ -91,7 +101,7 @@ namespace Engine.Common
         /// <returns>Returns created font map</returns>
         public static FontMap Map(Game game, string font, float size)
         {
-            var fMap = gCache.Find(f => f.Font == font && f.Size == size);
+            FontMap fMap = gCache.Find(f => f.Font == font && f.Size == size);
             if (fMap == null)
             {
                 fMap = new FontMap()
@@ -100,17 +110,17 @@ namespace Engine.Common
                     Size = size,
                 };
 
-                using (var bmp = new Bitmap(TEXTURESIZE, TEXTURESIZE))
-                using (var gra = System.Drawing.Graphics.FromImage(bmp))
+                using (Bitmap bmp = new Bitmap(TEXTURESIZE, TEXTURESIZE))
+                using (Graph gra = Graph.FromImage(bmp))
                 {
                     gra.TextRenderingHint = TextRenderingHint.AntiAliasGridFit;
 
                     gra.FillRegion(
                         Brushes.Transparent,
-                        new Region(new System.Drawing.RectangleF(0, 0, TEXTURESIZE, TEXTURESIZE)));
+                        new Region(new RectangleF(0, 0, TEXTURESIZE, TEXTURESIZE)));
 
-                    using (var fmt = StringFormat.GenericDefault)
-                    using (var fnt = new Font(font, size, FontStyle.Regular, GraphicsUnit.Pixel))
+                    using (StringFormat fmt = StringFormat.GenericDefault)
+                    using (Font fnt = new Font(font, size, FontStyle.Regular, GraphicsUnit.Pixel))
                     {
                         float left = 0f;
                         float top = 0f;
@@ -121,7 +131,7 @@ namespace Engine.Common
                         {
                             char c = keys[i];
 
-                            var s = gra.MeasureString(
+                            SizeF s = gra.MeasureString(
                                 c.ToString(),
                                 fnt,
                                 int.MaxValue,
@@ -146,7 +156,7 @@ namespace Engine.Common
                                 top,
                                 fmt);
 
-                            var chr = new FontMapChar()
+                            FontMapChar chr = new FontMapChar()
                             {
                                 X = left,
                                 Y = top,
@@ -160,7 +170,7 @@ namespace Engine.Common
                         }
                     }
 
-                    using (var mstr = new MemoryStream())
+                    using (MemoryStream mstr = new MemoryStream())
                     {
                         bmp.Save(mstr, ImageFormat.Png);
 

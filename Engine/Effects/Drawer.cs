@@ -1,4 +1,5 @@
-﻿
+﻿using SharpDX.Direct3D11;
+
 namespace Engine.Effects
 {
     using Engine.Common;
@@ -12,28 +13,28 @@ namespace Engine.Effects
         /// <summary>
         /// Graphics device
         /// </summary>
-        protected Graphics Graphics = null;
+        protected Device Device = null;
         /// <summary>
         /// Effect
         /// </summary>
-        protected EngineEffect Effect = null;
+        protected Effect Effect = null;
 
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="graphics">Graphics device</param>
+        /// <param name="device">Graphics device</param>
         /// <param name="effect">Effect file</param>
         /// <param name="compile">Compile effect</param>
-        public Drawer(Graphics graphics, byte[] effect, bool compile)
+        public Drawer(Device device, byte[] effect, bool compile)
         {
-            this.Graphics = graphics;
+            this.Device = device;
             if (compile)
             {
-                this.Effect = graphics.CompileEffect(effect);
+                this.Effect = device.CompileEffect(effect);
             }
             else
             {
-                this.Effect = graphics.LoadEffect(effect);
+                this.Effect = device.LoadEffect(effect);
             }
         }
         /// <summary>
@@ -55,6 +56,6 @@ namespace Engine.Effects
         /// <param name="stage">Stage</param>
         /// <param name="mode">Mode</param>
         /// <returns>Returns the technique to process the specified vertex type in the specified pipeline stage</returns>
-        public abstract EngineEffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode);
+        public abstract EffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode);
     }
 }

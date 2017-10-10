@@ -1,5 +1,11 @@
 ﻿using SharpDX;
 using System;
+using Device = SharpDX.Direct3D11.Device;
+using EffectMatrixVariable = SharpDX.Direct3D11.EffectMatrixVariable;
+using EffectShaderResourceVariable = SharpDX.Direct3D11.EffectShaderResourceVariable;
+using EffectTechnique = SharpDX.Direct3D11.EffectTechnique;
+using EffectVectorVariable = SharpDX.Direct3D11.EffectVectorVariable;
+using ShaderResourceView = SharpDX.Direct3D11.ShaderResourceView;
 
 namespace Engine.Effects
 {
@@ -13,29 +19,29 @@ namespace Engine.Effects
         /// <summary>
         /// Font drawing technique
         /// </summary>
-        public readonly EngineEffectTechnique FontDrawer = null;
+        public readonly EffectTechnique FontDrawer = null;
 
         /// <summary>
         /// World matrix effect variable
         /// </summary>
-        private EngineEffectVariableMatrix world = null;
+        private EffectMatrixVariable world = null;
         /// <summary>
         /// World view projection effect variable
         /// </summary>
-        private EngineEffectVariableMatrix worldViewProjection = null;
+        private EffectMatrixVariable worldViewProjection = null;
         /// <summary>
         /// Color effect variable
         /// </summary>
-        private EngineEffectVariableVector color = null;
+        private EffectVectorVariable color = null;
         /// <summary>
         /// Texture effect variable
         /// </summary>
-        private EngineEffectVariableTexture texture = null;
+        private EffectShaderResourceVariable texture = null;
 
         /// <summary>
         /// Current font texture
         /// </summary>
-        private EngineShaderResourceView currentTexture = null;
+        private ShaderResourceView currentTexture = null;
 
         /// <summary>
         /// World matrix
@@ -82,7 +88,7 @@ namespace Engine.Effects
         /// <summary>
         /// Texture
         /// </summary>
-        protected EngineShaderResourceView Texture
+        protected ShaderResourceView Texture
         {
             get
             {
@@ -104,18 +110,18 @@ namespace Engine.Effects
         /// <summary>
         /// Constructor
         /// </summary>
-        /// <param name="graphics">Graphics device</param>
+        /// <param name="device">Graphics device</param>
         /// <param name="effect">Effect code</param>
         /// <param name="compile">Compile code</param>
-        public EffectDefaultFont(Graphics graphics, byte[] effect, bool compile)
-            : base(graphics, effect, compile)
+        public EffectDefaultFont(Device device, byte[] effect, bool compile)
+            : base(device, effect, compile)
         {
             this.FontDrawer = this.Effect.GetTechniqueByName("FontDrawer");
 
-            this.world = this.Effect.GetVariableMatrix("gWorld");
-            this.worldViewProjection = this.Effect.GetVariableMatrix("gWorldViewProjection");
-            this.color = this.Effect.GetVariableVector("gColor");
-            this.texture = this.Effect.GetVariableTexture("gTexture");
+            this.world = this.Effect.GetVariableByName("gWorld").AsMatrix();
+            this.worldViewProjection = this.Effect.GetVariableByName("gWorldViewProjection").AsMatrix();
+            this.color = this.Effect.GetVariableByName("gColor").AsVector();
+            this.texture = this.Effect.GetVariableByName("gTexture").AsShaderResource();
         }
         /// <summary>
         /// Get technique by vertex type
@@ -125,7 +131,7 @@ namespace Engine.Effects
         /// <param name="stage">Stage</param>
         /// <param name="mode">Mode</param>
         /// <returns>Returns the technique to process the specified vertex type in the specified pipeline stage</returns>
-        public override EngineEffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
+        public override EffectTechnique GetTechnique(VertexTypes vertexType, bool instanced, DrawingStages stage, DrawerModesEnum mode)
         {
             if (stage == DrawingStages.Drawing)
             {
@@ -154,7 +160,7 @@ namespace Engine.Effects
             Matrix world,
             Matrix viewProjection,
             Color4 color,
-            EngineShaderResourceView texture)
+            ShaderResourceView texture)
         {
             this.World = world;
             this.WorldViewProjection = world * viewProjection;
