@@ -1,9 +1,8 @@
 ﻿using System;
+using SharpDX;
 
 namespace Engine
 {
-    using Engine.Common;
-
     /// <summary>
     /// Game time
     /// </summary>

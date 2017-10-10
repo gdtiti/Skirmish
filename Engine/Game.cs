@@ -149,8 +149,8 @@ namespace Engine
             {
                 OutputDescription mode = Graphics.GetDesktopMode();
 
-                screenWidth = mode.DesktopBounds.Right - mode.DesktopBounds.Left;
-                screenHeight = mode.DesktopBounds.Bottom - mode.DesktopBounds.Top;
+                screenWidth = mode.DesktopBounds.Width;
+                screenHeight = mode.DesktopBounds.Height;
             }
 
             this.Form = new EngineForm(name, screenWidth, screenHeight, fullScreen);
