@@ -578,27 +578,27 @@ namespace Engine
         /// <summary>
         /// Terrain low res textures
         /// </summary>
-        private EngineTexture terrainTexturesLR = null;
+        private EngineShaderResourceView terrainTexturesLR = null;
         /// <summary>
         /// Terrain high res textures
         /// </summary>
-        private EngineTexture terrainTexturesHR = null;
+        private EngineShaderResourceView terrainTexturesHR = null;
         /// <summary>
         /// Terrain normal maps
         /// </summary>
-        private EngineTexture terrainNormalMaps = null;
+        private EngineShaderResourceView terrainNormalMaps = null;
         /// <summary>
         /// Terrain specular maps
         /// </summary>
-        private EngineTexture terrainSpecularMaps = null;
+        private EngineShaderResourceView terrainSpecularMaps = null;
         /// <summary>
         /// Color textures for alpha map
         /// </summary>
-        private EngineTexture colorTextures = null;
+        private EngineShaderResourceView colorTextures = null;
         /// <summary>
         /// Alpha map
         /// </summary>
-        private EngineTexture alphaMap = null;
+        private EngineShaderResourceView alphaMap = null;
         /// <summary>
         /// Slope ranges
         /// </summary>

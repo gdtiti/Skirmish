@@ -74,7 +74,7 @@ namespace Engine
         /// <summary>
         /// Particle texture
         /// </summary>
-        public EngineTexture Texture { get; private set; }
+        public EngineShaderResourceView Texture { get; private set; }
         /// <summary>
         /// Texture count
         /// </summary>

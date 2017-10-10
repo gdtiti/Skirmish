@@ -1,4 +1,5 @@
-﻿
+﻿using System;
+
 namespace Engine.PathFinding
 {
     using Engine.Common;
@@ -29,7 +30,7 @@ namespace Engine.PathFinding
             }
             else
             {
-                throw new EngineException("Bad Graph type");
+                throw new Exception("Bad Graph type");
             }
         }
         /// <summary>
@@ -50,7 +51,7 @@ namespace Engine.PathFinding
             }
             else
             {
-                throw new EngineException("Bad Graph type");
+                throw new Exception("Bad Graph type");
             }
         }
     }

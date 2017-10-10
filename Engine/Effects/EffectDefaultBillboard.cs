@@ -135,23 +135,23 @@ namespace Engine.Effects
         /// <summary>
         /// Current texture array
         /// </summary>
-        private EngineTexture currentTextures = null;
+        private EngineShaderResourceView currentTextures = null;
         /// <summary>
         /// Current low definition shadow map
         /// </summary>
-        private EngineTexture currentShadowMapLD = null;
+        private EngineShaderResourceView currentShadowMapLD = null;
         /// <summary>
         /// Current high definition shadow map
         /// </summary>
-        private EngineTexture currentShadowMapHD = null;
+        private EngineShaderResourceView currentShadowMapHD = null;
         /// <summary>
         /// Current random texture
         /// </summary>
-        private EngineTexture currentTextureRandom = null;
+        private EngineShaderResourceView currentTextureRandom = null;
         /// <summary>
         /// Current material palette
         /// </summary>
-        private EngineTexture currentMaterialPalette = null;
+        private EngineShaderResourceView currentMaterialPalette = null;
 
         /// <summary>
         /// Directional lights
@@ -216,7 +216,7 @@ namespace Engine.Effects
         {
             get
             {
-                Int4 v = this.lightCount.GetVector<Int4>();
+                Int4 v = this.lightCount.GetIntVector();
 
                 return new int[] { v.X, v.Y, v.Z };
             }
@@ -234,11 +234,15 @@ namespace Engine.Effects
         {
             get
             {
-                return this.eyePositionWorld.GetVector<Vector3>();
+                Vector4 v = this.eyePositionWorld.GetFloatVector();
+
+                return new Vector3(v.X, v.Y, v.Z);
             }
             set
             {
-                this.eyePositionWorld.Set(value);
+                Vector4 v4 = new Vector4(value.X, value.Y, value.Z, 1f);
+
+                this.eyePositionWorld.Set(v4);
             }
         }
         /// <summary>
@@ -276,7 +280,7 @@ namespace Engine.Effects
         {
             get
             {
-                return this.fogColor.GetVector<Color4>();
+                return new Color4(this.fogColor.GetFloatVector());
             }
             set
             {
@@ -388,11 +392,11 @@ namespace Engine.Effects
         {
             get
             {
-                return this.materialIndex.GetUInt();
+                return (uint)this.materialIndex.GetFloat();
             }
             set
             {
-                this.materialIndex.Set(value);
+                this.materialIndex.Set((float)value);
             }
         }
         /// <summary>
@@ -402,7 +406,7 @@ namespace Engine.Effects
         {
             get
             {
-                return this.textureCount.GetUInt();
+                return (uint)this.textureCount.GetInt();
             }
             set
             {
@@ -416,7 +420,7 @@ namespace Engine.Effects
         {
             get
             {
-                return this.uvToggleByPID.GetUInt();
+                return (uint)this.uvToggleByPID.GetInt();
             }
             set
             {
@@ -426,7 +430,7 @@ namespace Engine.Effects
         /// <summary>
         /// Texture
         /// </summary>
-        protected EngineTexture Textures
+        protected EngineShaderResourceView Textures
         {
             get
             {
@@ -447,7 +451,7 @@ namespace Engine.Effects
         /// <summary>
         /// Low definition shadow map
         /// </summary>
-        protected EngineTexture ShadowMapLD
+        protected EngineShaderResourceView ShadowMapLD
         {
             get
             {
@@ -468,7 +472,7 @@ namespace Engine.Effects
         /// <summary>
         /// High definition shadow map
         /// </summary>
-        protected EngineTexture ShadowMapHD
+        protected EngineShaderResourceView ShadowMapHD
         {
             get
             {
@@ -493,11 +497,15 @@ namespace Engine.Effects
         {
             get
             {
-                return this.windDirection.GetVector<Vector3>();
+                Vector4 v = this.windDirection.GetFloatVector();
+
+                return new Vector3(v.X, v.Y, v.Z);
             }
             set
             {
-                this.windDirection.Set(value);
+                Vector4 v4 = new Vector4(value.X, value.Y, value.Z, 1f);
+
+                this.windDirection.Set(v4);
             }
         }
         /// <summary>
@@ -531,7 +539,7 @@ namespace Engine.Effects
         /// <summary>
         /// Random texture
         /// </summary>
-        protected EngineTexture TextureRandom
+        protected EngineShaderResourceView TextureRandom
         {
             get
             {
@@ -556,17 +564,17 @@ namespace Engine.Effects
         {
             get
             {
-                return this.materialPaletteWidth.GetUInt();
+                return (uint)this.materialPaletteWidth.GetFloat();
             }
             set
             {
-                this.materialPaletteWidth.Set(value);
+                this.materialPaletteWidth.Set((float)value);
             }
         }
         /// <summary>
         /// Material palette
         /// </summary>
-        protected EngineTexture MaterialPalette
+        protected EngineShaderResourceView MaterialPalette
         {
             get
             {
@@ -591,11 +599,15 @@ namespace Engine.Effects
         {
             get
             {
-                return this.lod.GetVector<Vector3>();
+                var v = this.lod.GetFloatVector();
+
+                return new Vector3(v.X, v.Y, v.Z);
             }
             set
             {
-                this.lod.Set(value);
+                var v = new Vector4(value, 0);
+
+                this.lod.Set(v);
             }
         }
 
@@ -661,17 +673,17 @@ namespace Engine.Effects
                         case DrawerModesEnum.Deferred:
                             return this.ForwardBillboard; //TODO: build a proper deferred billboard
                         default:
-                            throw new EngineException(string.Format("Bad vertex type for effect and stage: {0} - {1}", vertexType, stage));
+                            throw new Exception(string.Format("Bad vertex type for effect and stage: {0} - {1}", vertexType, stage));
                     }
                 }
                 else
                 {
-                    throw new EngineException(string.Format("Bad vertex type for effect and stage: {0} - {1}", vertexType, stage));
+                    throw new Exception(string.Format("Bad vertex type for effect and stage: {0} - {1}", vertexType, stage));
                 }
             }
             else
             {
-                throw new EngineException(string.Format("Bad stage for effect: {0}", stage));
+                throw new Exception(string.Format("Bad stage for effect: {0}", stage));
             }
         }
 
@@ -684,7 +696,7 @@ namespace Engine.Effects
         /// <param name="lod2">Medium level of detail maximum distance</param>
         /// <param name="lod3">Low level of detail maximum distance</param>
         public void UpdateGlobals(
-            EngineTexture materialPalette,
+            EngineShaderResourceView materialPalette,
             uint materialPaletteWidth,
             float lod1,
             float lod2,
@@ -723,20 +735,20 @@ namespace Engine.Effects
             Vector3 eyePositionWorld,
             SceneLights lights,
             int shadowMaps,
-            EngineTexture shadowMapLD,
-            EngineTexture shadowMapHD,
+            EngineShaderResourceView shadowMapLD,
+            EngineShaderResourceView shadowMapHD,
             Matrix fromLightViewProjectionLD,
             Matrix fromLightViewProjectionHD,
             Vector3 windDirection,
             float windStrength,
             float totalTime,
-            EngineTexture randomTexture,
+            EngineShaderResourceView randomTexture,
             float startRadius,
             float endRadius,
             uint materialIndex,
             uint textureCount,
             bool uvToggle,
-            EngineTexture texture)
+            EngineShaderResourceView texture)
         {
             this.World = world;
             this.WorldViewProjection = world * viewProjection;

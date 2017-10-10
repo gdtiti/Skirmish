@@ -1,4 +1,5 @@
 ﻿using SharpDX;
+using System;
 
 namespace Engine.Effects
 {
@@ -62,11 +63,11 @@ namespace Engine.Effects
         /// <summary>
         /// Current texture array
         /// </summary>
-        private EngineTexture currentTextures = null;
+        private EngineShaderResourceView currentTextures = null;
         /// <summary>
         /// Current random texture
         /// </summary>
-        private EngineTexture currentTextureRandom = null;
+        private EngineShaderResourceView currentTextureRandom = null;
 
         /// <summary>
         /// World view projection matrix
@@ -89,11 +90,15 @@ namespace Engine.Effects
         {
             get
             {
-                return this.eyePositionWorld.GetVector<Vector3>();
+                Vector4 v = this.eyePositionWorld.GetFloatVector();
+
+                return new Vector3(v.X, v.Y, v.Z);
             }
             set
             {
-                this.eyePositionWorld.Set(value);
+                Vector4 v4 = new Vector4(value.X, value.Y, value.Z, 1f);
+
+                this.eyePositionWorld.Set(v4);
             }
         }
         /// <summary>
@@ -131,11 +136,15 @@ namespace Engine.Effects
         {
             get
             {
-                return this.windDirection.GetVector<Vector3>();
+                Vector4 v = this.windDirection.GetFloatVector();
+
+                return new Vector3(v.X, v.Y, v.Z);
             }
             set
             {
-                this.windDirection.Set(value);
+                Vector4 v4 = new Vector4(value.X, value.Y, value.Z, 1f);
+
+                this.windDirection.Set(v4);
             }
         }
         /// <summary>
@@ -173,7 +182,7 @@ namespace Engine.Effects
         {
             get
             {
-                return this.textureCount.GetUInt();
+                return (uint)this.textureCount.GetInt();
             }
             set
             {
@@ -187,7 +196,7 @@ namespace Engine.Effects
         {
             get
             {
-                return this.uvToggleByPID.GetUInt();
+                return (uint)this.uvToggleByPID.GetInt();
             }
             set
             {
@@ -197,7 +206,7 @@ namespace Engine.Effects
         /// <summary>
         /// Texture
         /// </summary>
-        protected EngineTexture Textures
+        protected EngineShaderResourceView Textures
         {
             get
             {
@@ -218,7 +227,7 @@ namespace Engine.Effects
         /// <summary>
         /// Random texture
         /// </summary>
-        protected EngineTexture TextureRandom
+        protected EngineShaderResourceView TextureRandom
         {
             get
             {
@@ -280,17 +289,17 @@ namespace Engine.Effects
                         case DrawerModesEnum.ShadowMap:
                             return this.ShadowMapBillboard;
                         default:
-                            throw new EngineException(string.Format("Bad vertex type for effect and stage: {0} - {1}", vertexType, stage));
+                            throw new Exception(string.Format("Bad vertex type for effect and stage: {0} - {1}", vertexType, stage));
                     }
                 }
                 else
                 {
-                    throw new EngineException(string.Format("Bad vertex type for effect and stage: {0} - {1}", vertexType, stage));
+                    throw new Exception(string.Format("Bad vertex type for effect and stage: {0} - {1}", vertexType, stage));
                 }
             }
             else
             {
-                throw new EngineException(string.Format("Bad stage for effect: {0}", stage));
+                throw new Exception(string.Format("Bad stage for effect: {0}", stage));
             }
         }
         /// <summary>
@@ -310,7 +319,7 @@ namespace Engine.Effects
             Vector3 windDirection,
             float windStrength,
             float totalTime,
-            EngineTexture randomTexture)
+            EngineShaderResourceView randomTexture)
         {
             this.WorldViewProjection = world * viewProjection;
             this.EyePositionWorld = eyePositionWorld;
@@ -333,7 +342,7 @@ namespace Engine.Effects
             float endRadius,
             uint textureCount,
             bool uvToggle,
-            EngineTexture texture)
+            EngineShaderResourceView texture)
         {
             this.StartRadius = startRadius;
             this.EndRadius = endRadius;

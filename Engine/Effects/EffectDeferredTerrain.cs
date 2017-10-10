@@ -1,4 +1,5 @@
 ﻿using SharpDX;
+using System;
 
 namespace Engine.Effects
 {
@@ -70,27 +71,27 @@ namespace Engine.Effects
         /// <summary>
         /// Current low resolution diffuse map
         /// </summary>
-        private EngineTexture currentDiffuseMapLR = null;
+        private EngineShaderResourceView currentDiffuseMapLR = null;
         /// <summary>
         /// Current hihg resolution diffuse map
         /// </summary>
-        private EngineTexture currentDiffuseMapHR = null;
+        private EngineShaderResourceView currentDiffuseMapHR = null;
         /// <summary>
         /// Current normal map
         /// </summary>
-        private EngineTexture currentNormalMap = null;
+        private EngineShaderResourceView currentNormalMap = null;
         /// <summary>
         /// Current specular map
         /// </summary>
-        private EngineTexture currentSpecularMap = null;
+        private EngineShaderResourceView currentSpecularMap = null;
         /// <summary>
         /// Current color texture array
         /// </summary>
-        private EngineTexture currentColorTextures = null;
+        private EngineShaderResourceView currentColorTextures = null;
         /// <summary>
         /// Current alpha map
         /// </summary>
-        private EngineTexture currentAlphaMap = null;
+        private EngineShaderResourceView currentAlphaMap = null;
 
         /// <summary>
         /// World matrix
@@ -137,7 +138,7 @@ namespace Engine.Effects
         /// <summary>
         /// Low resolution textures
         /// </summary>
-        protected EngineTexture DiffuseMapLR
+        protected EngineShaderResourceView DiffuseMapLR
         {
             get
             {
@@ -158,7 +159,7 @@ namespace Engine.Effects
         /// <summary>
         /// High resolution textures
         /// </summary>
-        protected EngineTexture DiffuseMapHR
+        protected EngineShaderResourceView DiffuseMapHR
         {
             get
             {
@@ -179,7 +180,7 @@ namespace Engine.Effects
         /// <summary>
         /// Normal map
         /// </summary>
-        protected EngineTexture NormalMap
+        protected EngineShaderResourceView NormalMap
         {
             get
             {
@@ -200,7 +201,7 @@ namespace Engine.Effects
         /// <summary>
         /// Scpecular map
         /// </summary>
-        protected EngineTexture SpecularMap
+        protected EngineShaderResourceView SpecularMap
         {
             get
             {
@@ -221,7 +222,7 @@ namespace Engine.Effects
         /// <summary>
         /// Color textures for alpha map
         /// </summary>
-        protected EngineTexture ColorTextures
+        protected EngineShaderResourceView ColorTextures
         {
             get
             {
@@ -242,7 +243,7 @@ namespace Engine.Effects
         /// <summary>
         /// Alpha map
         /// </summary>
-        protected EngineTexture AlphaMap
+        protected EngineShaderResourceView AlphaMap
         {
             get
             {
@@ -267,7 +268,7 @@ namespace Engine.Effects
         {
             get
             {
-                return this.parameters.GetVector<Vector4>();
+                return this.parameters.GetFloatVector();
             }
             set
             {
@@ -281,11 +282,11 @@ namespace Engine.Effects
         {
             get
             {
-                return this.materialIndex.GetUInt();
+                return (uint)this.materialIndex.GetFloat();
             }
             set
             {
-                this.materialIndex.Set(value);
+                this.materialIndex.Set((float)value);
             }
         }
 
@@ -337,7 +338,7 @@ namespace Engine.Effects
 
             if (technique == null)
             {
-                throw new EngineException(string.Format("Bad vertex type for effect, stage and mode: {0} - {1} - {2}", vertexType, stage, mode));
+                throw new Exception(string.Format("Bad vertex type for effect, stage and mode: {0} - {1} - {2}", vertexType, stage, mode));
             }
 
             return technique;
@@ -374,15 +375,15 @@ namespace Engine.Effects
         /// <param name="proportion">Lerping proportion</param>
         public void UpdatePerObject(
             uint materialIndex,
-            EngineTexture normalMap,
-            EngineTexture specularMap,
+            EngineShaderResourceView normalMap,
+            EngineShaderResourceView specularMap,
             bool useAlphaMap,
-            EngineTexture alphaMap,
-            EngineTexture colorTextures,
+            EngineShaderResourceView alphaMap,
+            EngineShaderResourceView colorTextures,
             bool useSlopes,
             Vector2 slopeRanges,
-            EngineTexture diffuseMapLR,
-            EngineTexture diffuseMapHR,
+            EngineShaderResourceView diffuseMapLR,
+            EngineShaderResourceView diffuseMapHR,
             float proportion)
         {
             this.MaterialIndex = materialIndex;

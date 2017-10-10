@@ -1,4 +1,5 @@
 ﻿using SharpDX;
+using System;
 
 namespace Engine.Effects
 {
@@ -34,7 +35,7 @@ namespace Engine.Effects
         /// <summary>
         /// Current font texture
         /// </summary>
-        private EngineTexture currentTexture = null;
+        private EngineShaderResourceView currentTexture = null;
 
         /// <summary>
         /// World matrix
@@ -81,7 +82,7 @@ namespace Engine.Effects
         /// <summary>
         /// Texture
         /// </summary>
-        protected EngineTexture Texture
+        protected EngineShaderResourceView Texture
         {
             get
             {
@@ -134,12 +135,12 @@ namespace Engine.Effects
                 }
                 else
                 {
-                    throw new EngineException(string.Format("Bad vertex type for effect and stage: {0} - {1}", vertexType, stage));
+                    throw new Exception(string.Format("Bad vertex type for effect and stage: {0} - {1}", vertexType, stage));
                 }
             }
             else
             {
-                throw new EngineException(string.Format("Bad stage for effect: {0}", stage));
+                throw new Exception(string.Format("Bad stage for effect: {0}", stage));
             }
         }
         /// <summary>
@@ -153,7 +154,7 @@ namespace Engine.Effects
             Matrix world,
             Matrix viewProjection,
             Color4 color,
-            EngineTexture texture)
+            EngineShaderResourceView texture)
         {
             this.World = world;
             this.WorldViewProjection = world * viewProjection;

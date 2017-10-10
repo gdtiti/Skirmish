@@ -80,7 +80,7 @@ namespace Engine
         /// <summary>
         /// Sprite texture
         /// </summary>
-        private EngineTexture spriteTexture = null;
+        private EngineShaderResourceView spriteTexture = null;
 
         /// <summary>
         /// Gets or sets text left position in 2D screen

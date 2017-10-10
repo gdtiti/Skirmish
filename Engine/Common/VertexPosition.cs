@@ -1,4 +1,5 @@
 ﻿using SharpDX;
+using System;
 using System.Runtime.InteropServices;
 
 namespace Engine.Common
@@ -57,7 +58,7 @@ namespace Engine.Common
         public T GetChannelValue<T>(VertexDataChannels channel)
         {
             if (channel == VertexDataChannels.Position) return (T)(object)this.Position;
-            else throw new EngineException(string.Format("Channel data not found: {0}", channel));
+            else throw new Exception(string.Format("Channel data not found: {0}", channel));
         }
         /// <summary>
         /// Sets the channer value
@@ -68,7 +69,7 @@ namespace Engine.Common
         public void SetChannelValue<T>(VertexDataChannels channel, T value)
         {
             if (channel == VertexDataChannels.Position) this.Position = (Vector3)(object)value;
-            else throw new EngineException(string.Format("Channel data not found: {0}", channel));
+            else throw new Exception(string.Format("Channel data not found: {0}", channel));
         }
 
         /// <summary>

@@ -29,7 +29,7 @@ namespace Engine
         /// <summary>
         /// Cube map texture
         /// </summary>
-        private EngineTexture cubeMapTexture = null;
+        private EngineShaderResourceView cubeMapTexture = null;
 
         /// <summary>
         /// Manipulator
@@ -115,7 +115,7 @@ namespace Engine
         /// Set the instance texture
         /// </summary>
         /// <param name="texture">Texture</param>
-        public void SetTexture(EngineTexture texture)
+        public void SetTexture(EngineShaderResourceView texture)
         {
             this.cubeMapTexture = texture;
         }

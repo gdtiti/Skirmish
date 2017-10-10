@@ -43,7 +43,7 @@ namespace Engine
         /// <summary>
         /// Texture
         /// </summary>
-        public EngineTexture Texture { get; set; }
+        public EngineShaderResourceView Texture { get; set; }
         /// <summary>
         /// Drawing channels
         /// </summary>
